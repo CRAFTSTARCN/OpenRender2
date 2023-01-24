@@ -1,0 +1,8 @@
+./Binary
+./Build
+./NsightDebug
+./ShaderWork
+
+.vscode
+.cache
+__pycache__
