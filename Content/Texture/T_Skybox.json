@@ -1,0 +1,35 @@
+{
+    "AssetType" : "TextureCube",
+
+    "Format" : "HDR",
+
+    "WrapU" : "Repeat",
+    "WrapV" : "Repeat",
+    "MagFilter" : "Linear",
+    "MinFilter" : "Linear",
+    "MipmapFilter" : "Nearest",
+
+    "BorderColor" : 
+    {
+        "R" : 0.0,
+        "G" : 0.0,
+        "B" : 0.0,
+        "A" : 1.0
+    },
+    
+    "Anisotropy" : 0,
+
+    "FilterMipmap" : false,
+    "AutoMipmapLevel" : 0,
+
+    "Data" : [{
+        "X+" : "./Texture/Skybox/pure_sky_posx.hdr",
+        "X-" : "./Texture/Skybox/pure_sky_negx.hdr",
+        "Y+" : "./Texture/Skybox/pure_sky_posy.hdr",
+        "Y-" : "./Texture/Skybox/pure_sky_negy.hdr",
+        "Z+" : "./Texture/Skybox/pure_sky_posz.hdr",
+        "Z-" : "./Texture/Skybox/pure_sky_negz.hdr"
+    }],
+
+    "UsageTime" : ["Frag"] 
+}

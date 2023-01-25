@@ -1,0 +1,11 @@
+{
+    "AssetType" : "StaticMeshPack",
+
+    "MeshAddress" : "./Mesh/Bunny/Bunny.fbx",
+    "MeshletAddress" : "./Mesh/Bunny/Bunny.mlt",
+
+    "DefaultMaterial" : [
+        "./Materials/MI_Bunny.json",
+        "./Materials/MI_Bunny.json"
+    ]
+}

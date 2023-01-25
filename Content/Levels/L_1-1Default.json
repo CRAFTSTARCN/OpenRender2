@@ -1,0 +1,78 @@
+{
+    "AssetTyp" : "Level",
+
+    "Objects" : 
+    [
+        {
+            "Name" : "Bunny",
+            "Scripts" : 
+            [
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "Mesh",
+                    "Parent" : null,
+                    "MaterialOverride": null,
+                    "StaticMesh" : "./Mesh/Bunny.json",
+                    "PackIndex" : 0,
+                    "Transform" : 
+                    {
+                        "Translate" : 
+                        {
+                            "X" : 0.0,
+                            "Y" : -10.0,
+                            "Z" : -50.0
+                        },
+                        "Rotation" : 
+                        {
+                            "X" : -90.0,
+                            "Y" : -45.0,
+                            "Z" : 0.0
+                        },
+                        "Scale" : 
+                        {
+                            "X" : 20.0,
+                            "Y" : 20.0,
+                            "Z" : 20.0
+                        }
+                    }
+                },
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "MeshEye",
+                    "Parent" : "Mesh",
+                    "StaticMesh" : "./Mesh/Bunny.json",
+                    "PackIndex" : 1,
+                    "MaterialOverride" : null,
+                    "Transform" : null
+                }
+            ]
+        }
+    ],
+
+    "Skybox" :  
+    {
+        "Skybox" : "./Texture/AnimSky/T_Anim_Skybox.json",
+        "Radiance" : "./Texture/AnimSky/T_Anim_Radiance.json",
+        "Irradiance" : "./Texture/AnimSky/T_Anim_Irradiance.json"
+    },
+
+    "Camera" : 
+    {
+        "Position" : 
+        {
+            "X" : 0.0,
+            "Y" : 0.0,
+            "Z" : 0.0
+        },
+        "Rotation" : 
+        {
+            "Pitch" : 0.0,
+            "Yaw" : 0.0,
+            "Row" : 0.0
+        },
+
+        "Near" : 0.1,
+        "Far" : 100000,
+        "FOVV" : 75.0
+    }
+}

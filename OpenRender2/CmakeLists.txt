@@ -1,0 +1,35 @@
+set(TARGET_NAME OpenRender2)
+
+file(GLOB_RECURSE HEADER_FILE_APP "*.h")
+file(GLOB_RECURSE SOURCE_FILE_APP "*.cpp")
+
+add_executable(${TARGET_NAME} ${HEADER_FILE_APP} ${SOURCE_FILE_APP})
+
+target_link_libraries(${TARGET_NAME} OpenRenderRuntime)
+
+set_target_properties(OpenRender2 PROPERTIES FOLDER ${RENDER_FOLDER_NAME})
+
+set(CONTENT_DIR_NAME "Content/")
+set(PASS_SHADER_DIR_NAME "PassShader/")
+set(EXAMPLE_CONFIG ${ROOT_DIR}/Config.ini)
+set(EXAMPLE_PROJECT ${ROOT_DIR}/Project.json)
+set(EXAMPLE_CONTENT ${ROOT_DIR}/${CONTENT_DIR_NAME})
+set(PASS_SHADER ${ROOT_DIR}/${PASS_SHADER_DIR_NAME})
+
+set(POST_BUILD_CMD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${BINARY_DIR}${CONTENT_DIR_NAME}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:assimp>/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${EXAMPLE_CONFIG}" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${EXAMPLE_PROJECT}" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXAMPLE_CONTENT}" "${BINARY_DIR}${CONTENT_DIR_NAME}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${PASS_SHADER}" "${BINARY_DIR}${PASS_SHADER_DIR_NAME}"
+)
+
+if(UNIX)
+    set(CMAKE_BUILD_WITH_INSTALL_PATH TRUE)
+    set(CMAKE_INSTALL_PATH "\${ORIGIN}")
+endif()
+
+add_custom_command(TARGET ${TARGET_NAME} ${POST_BUILD_CMD})

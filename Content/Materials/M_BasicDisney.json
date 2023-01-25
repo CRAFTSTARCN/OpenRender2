@@ -1,0 +1,34 @@
+{
+    "AssetType" : "MaterialBase",
+
+    "BaseShader" : "./Materials/Shaders/BasicDisneyPBR.Shader",
+    "PassShaders" : {
+        "GBuffer" : {
+            "MeshShader" : "./Materials/Shaders/BasicDisneyPBR.GBuffer.Mesh",
+            "FragmentShader" : "./Materials/ShaderS/BasicDisneyPBR.GBuffer.Frag"
+        }
+    },
+
+    "BlendMode" : "Opaque",
+    "DoubleSided" : false,
+
+    "BufferParameters" : {
+        "Vec" : ["Emissive"],
+        "Scalar" : [
+            "Metallic",
+            "Specular",
+            "Roughness",
+            "Subsurface",
+            "Anisotropy"],
+        "BufferStage" : ["Frag"]
+    },
+
+    "TexParam" : [
+        {
+        "Name" : "BaseColor",
+        "Stage" : ["Frag"],
+        "Type" : "Tex2D"
+        }
+    ]
+
+}

@@ -1,0 +1,30 @@
+{
+    "AssetType" : "Texture2D",
+
+    "Format" : "SRGB",
+
+    "WrapU" : "Repeat",
+    "WrapV" : "Repeat",
+    "MagFilter" : "Linear",
+    "MinFilter" : "Linear",
+    "MipmapFilter" : "Nearest",
+
+    "BorderColor" : 
+    {
+        "R" : 0.0,
+        "G" : 0.0,
+        "B" : 0.0,
+        "A" : 1.0
+    },
+    
+    "Anisotropy" : 0,
+
+    "FilterMipmap" : true,
+    "AutoMipmapLevel" : 4,
+
+    "Data" : [
+        "./Texture/T_Gold_Color.png"
+    ],
+
+    "UsageTime" : ["Frag"] 
+}

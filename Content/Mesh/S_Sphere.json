@@ -1,0 +1,10 @@
+{
+    "AssetType" : "StaticMeshPack",
+
+    "MeshAddress" : "./Mesh/Sphere/Sphere.fbx",
+    "MeshletAddress" : "./Mesh/Sphere/Sphere.mlt",
+
+    "DefaultMaterial" : [
+        "./Materials/MI_BasicDisney_Sword_Edge.json"
+    ]
+}

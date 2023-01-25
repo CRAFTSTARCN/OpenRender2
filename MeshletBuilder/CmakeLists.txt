@@ -1,0 +1,26 @@
+set(TARGET_NAME MeshletBuilder)
+
+file(GLOB_RECURSE HEADER_FILE_MB "*.h")
+file(GLOB_RECURSE SOURCE_FILE_MB "*.cpp")
+
+add_executable(${TARGET_NAME} ${HEADER_FILE_MB} ${SOURCE_FILE_MB})
+
+target_link_libraries(${TARGET_NAME} OpenRenderRuntime)
+
+set_target_properties(MeshletBuilder PROPERTIES FOLDER ${TOOL_FOLDER_NAME})
+
+set(MB_CONFIG ${ROOT_DIR}/MeshletBuilderConfig.ini)
+
+set(POST_BUILD_CMD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:${TARGET_NAME}>/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "$<TARGET_FILE_DIR:assimp>/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${MB_CONFIG}" "${BINARY_DIR}"
+)
+
+if(UNIX)
+    set(CMAKE_BUILD_WITH_INSTALL_PATH TRUE)
+    set(CMAKE_INSTALL_PATH "\${ORIGIN}")
+endif()
+
+
+add_custom_command(TARGET ${TARGET_NAME} ${POST_BUILD_CMD})

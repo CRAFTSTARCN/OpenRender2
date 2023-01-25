@@ -1,0 +1,141 @@
+﻿#pragma once
+
+enum InputKey
+{
+	InputKey_LEFT_MOUSE         = 0,
+	InputKey_RIGHT_MOUSE        = 1,
+	InputKey_MIDDLE_MOUSE       = 2,
+
+	InputKey_MOUSE_MOVE         = 10,
+	InputKey_MOUSE_SCROLL       = 11,
+	
+	InputKey_SPACE				= 32,  
+	InputKey_APOSTROPHE         = 39,  /* ' */
+	InputKey_COMMA              = 44,  /* , */
+	InputKey_MINUS              = 45,  /* - */
+	InputKey_PERIOD             = 46,  /* . */
+	InputKey_SLASH              = 47,  /* / */
+	InputKey_0                  = 48,
+	InputKey_1                  = 49,
+	InputKey_2                  = 50,
+	InputKey_3                  = 51,
+	InputKey_4                  = 52,
+	InputKey_5                  = 53,
+	InputKey_6                  = 54,
+	InputKey_7                  = 55,
+	InputKey_8                  = 56,
+	InputKey_9                  = 57,
+	InputKey_SEMICOLON          = 59,  /* ; */
+	InputKey_EQUAL              = 61,  /* = */
+	InputKey_A                  = 65,
+	InputKey_B                  = 66,
+	InputKey_C                  = 67,
+	InputKey_D                  = 68,
+	InputKey_E                  = 69,
+	InputKey_F                  = 70,
+	InputKey_G                  = 71,
+	InputKey_H                  = 72,
+	InputKey_I                  = 73,
+	InputKey_J                  = 74,
+	InputKey_K                  = 75,
+	InputKey_L                  = 76,
+	InputKey_M                  = 77,
+	InputKey_N                  = 78,
+	InputKey_O                  = 79,
+	InputKey_P                  = 80,
+	InputKey_Q                  = 81,
+	InputKey_R                  = 82,
+	InputKey_S                  = 83,
+	InputKey_T                  = 84,
+	InputKey_U                  = 85,
+	InputKey_V                  = 86,
+	InputKey_W                  = 87,
+	InputKey_X                  = 88,
+	InputKey_Y                  = 89,
+	InputKey_Z                  = 90,
+	InputKey_LEFT_BRACKET       = 91,  /* [ */
+	InputKey_BACKSLASH          = 92,  /* \ */
+	InputKey_RIGHT_BRACKET      = 93,  /* ] */
+	InputKey_GRAVE_ACCENT       = 96, /* ` */
+	InputKey_WORLD_1            = 161, /* non-us 1*/
+	InputKey_WORLD_2            = 162, /* non-us 2*/
+	InputKey_ESCAPE             = 256,
+	InputKey_ENTER              = 257,
+	InputKey_TAB                = 258,
+	InputKey_BACKSPACE          = 259,
+	InputKey_INSERT             = 260,
+	InputKey_DELETE             = 261,
+	InputKey_RIGHT              = 262,
+	InputKey_LEFT               = 263,
+	InputKey_DOWN               = 264,
+	InputKey_UP                 = 265,
+	InputKey_PAGE_UP            = 266,
+	InputKey_PAGE_DOWN          = 267,
+	InputKey_HOME               = 268,
+	InputKey_END                = 269,
+	InputKey_CAPS_LOCK          = 280,
+	InputKey_SCROLL_LOCK        = 281,
+	InputKey_NUM_LOCK           = 282,
+	InputKey_PRINT_SCREEN       = 283,
+	InputKey_PAUSE              = 284,
+	InputKey_F1                 = 290,
+	InputKey_F2                 = 291,
+	InputKey_F3                 = 292,
+	InputKey_F4                 = 293,
+	InputKey_F5                 = 294,
+	InputKey_F6                 = 295,
+	InputKey_F7                 = 296,
+	InputKey_F8                 = 297,
+	InputKey_F9                 = 298,
+	InputKey_F10                = 299,
+	InputKey_F11                = 300,
+	InputKey_F12                = 301,
+	InputKey_F13                = 302,
+	InputKey_F14                = 303,
+	InputKey_F15                = 304,
+	InputKey_F16                = 305,
+	InputKey_F17                = 306,
+	InputKey_F18                = 307,
+	InputKey_F19                = 308,
+	InputKey_F20                = 309,
+	InputKey_F21                = 310,
+	InputKey_F22                = 311,
+	InputKey_F23                = 312,
+	InputKey_F24                = 313,
+	InputKey_F25                = 314,
+	InputKey_KP_0               = 320,
+	InputKey_KP_1               = 321,
+	InputKey_KP_2               = 322,
+	InputKey_KP_3               = 323,
+	InputKey_KP_4               = 324,
+	InputKey_KP_5               = 325,
+	InputKey_KP_6               = 326,
+	InputKey_KP_7               = 327,
+	InputKey_KP_8               = 328,
+	InputKey_KP_9               = 329,
+	InputKey_KP_DECIMAL         = 330,
+	InputKey_KP_DIVIDE          = 331,
+	InputKey_KP_MULTIPLY        = 332,
+	InputKey_KP_SUBTRACT        = 333,
+	InputKey_KP_ADD             = 334,
+	InputKey_KP_ENTER           = 335,
+	InputKey_KP_EQUAL           = 336,
+	InputKey_LEFT_SHIFT         = 340,
+	InputKey_LEFT_CONTROL       = 341,
+	InputKey_LEFT_ALT           = 342,
+	InputKey_LEFT_SUPER         = 343,
+	InputKey_RIGHT_SHIFT        = 344,
+	InputKey_RIGHT_CONTROL      = 345,
+	InputKey_RIGHT_ALT          = 346,
+	InputKey_RIGHT_SUPER        = 347,
+	InputKey_MENU               = 348,
+
+	InputKey_MAX                = 349
+};
+
+enum MouseButton
+{
+	MouseButton_Left = InputKey::InputKey_LEFT_MOUSE,
+	MouseButton_Right = InputKey::InputKey_RIGHT_MOUSE,
+	MouseButton_Middle = InputKey::InputKey_MIDDLE_MOUSE
+};

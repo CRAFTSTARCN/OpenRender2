@@ -1,0 +1,35 @@
+{
+    "AssetType" : "TextureCube",
+
+    "Format" : "HDR",
+
+    "WrapU" : "Repeat",
+    "WrapV" : "Repeat",
+    "MagFilter" : "Linear",
+    "MinFilter" : "Linear",
+    "MipmapFilter" : "Nearest",
+
+    "BorderColor" : 
+    {
+        "R" : 0.0,
+        "G" : 0.0,
+        "B" : 0.0,
+        "A" : 1.0
+    },
+    
+    "Anisotropy" : 0,
+
+    "FilterMipmap" : false,
+    "AutoMipmapLevel" : 0,
+
+    "Data" : [{
+        "X+" : "./Texture/Vestibule/vestibule_posx.hdr",
+        "X-" : "./Texture/Vestibule/vestibule_negx.hdr",
+        "Y+" : "./Texture/Vestibule/vestibule_posy.hdr",
+        "Y-" : "./Texture/Vestibule/vestibule_negy.hdr",
+        "Z+" : "./Texture/Vestibule/vestibule_posz.hdr",
+        "Z-" : "./Texture/Vestibule/vestibule_negz.hdr"
+    }],
+
+    "UsageTime" : ["Frag"] 
+}
