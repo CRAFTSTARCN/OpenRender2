@@ -1,7 +1,7 @@
-./Binary/
-./Build/
-./NsightDebug/
-./ShaderWork.code-workspace
+Binary
+Build
+NsightDebug
+ShaderWork.code-workspace
 
 .vscode
 .cache
