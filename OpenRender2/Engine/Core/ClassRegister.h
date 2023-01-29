@@ -10,6 +10,8 @@ private: \
 static ClassRegister _##ClassName##ClassRegister;\
 public: \
 virtual ObjectClass* GetClass() const;\
+static ObjectClass* StaticClass();\
+static ClassName* GetNewInstance();\
 private:
 
 #define DEFINE_OBJECT_CLASS(ClassName) \
@@ -17,6 +19,12 @@ ClassRegister ClassName::_##ClassName##ClassRegister = ClassRegister(#ClassName,
 \
 ObjectClass* ClassName::GetClass() const{\
 return ClassName::_##ClassName##ClassRegister.GetRegistered();\
+}\
+ObjectClass* ClassName::StaticClass() {\
+	return ClassName::_##ClassName##ClassRegister.GetRegistered(); \
+}\
+ClassName* ClassName::GetNewInstance() {\
+	return dynamic_cast<ClassName*>(ClassName::StaticClass()->GetNewObject());\
 }
 
 
