@@ -30,6 +30,11 @@ layout(location=0) in Interpolants
     vec3 world_normal;
     vec3 world_tangent;
     vec2 uv;
+
+#ifdef _DEBUG_MESHLET
+    vec3 debug_color;
+#endif
+
 } IN;
 
 layout(location = 0) out vec4 gbuffer_a;
@@ -49,6 +54,9 @@ void fragment_function(
     out vec4 gbuffer_e)
 {
     DefaultLitGBufferData data;
+#ifdef _DEBUG_MESHLET
+    data.base_color = IN.debug_color; //texture(BaseColor, IN.uv).rgb;
+#endif
     data.base_color = texture(BaseColor, IN.uv).rgb;
     data.ambient_occlusion = 1.0;
     data.normal = normalize(IN.world_normal);

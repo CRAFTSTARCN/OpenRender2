@@ -71,11 +71,15 @@ layout(location=0) out Interpolants
     vec3 world_normal;
     vec3 world_tangent;
     vec2 uv;
-    //uint meshlet_id;
+#ifdef _DEBUG_MESHLET
+    vec3 debug_color;
+#endif
 } OUT[];
 
+#include "debug_colorize.inl"
 
-void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id) 
+
+void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id, uint meshlet_id) 
 {
     if(MESHLET_VERTEX_ITERATIONS * WORKGROUP_SIZE > VERTEX_OUTPUT_SIZE && vertex_id >= VERTEX_OUTPUT_SIZE) 
     {
@@ -86,6 +90,10 @@ void process_vertex(in VertexStructure vertex, in InstanceData instance, uint ve
     OUT[vertex_id].world_normal = normalize((instance.mat_model_normal * vec4(vertex.Nx, vertex.Ny, vertex.Nz, 0.0)).xyz);
     OUT[vertex_id].world_tangent = normalize((instance.mat_model * vec4(vertex.Tx, vertex.Ty, vertex.Tz, 0.0)).xyz);
     OUT[vertex_id].uv = vec2(vertex.u, vertex.v);
+
+#ifdef _DEBUG_MESHLET
+    OUT[vertex_id].debug_color = debug_colors[meshlet_id % DEBUG_COLOR_COUNT];
+#endif
 
     gl_MeshVerticesEXT[vertex_id].gl_Position = mat_view_proj * vec4(wp, 1.0);
 }
@@ -111,7 +119,7 @@ void main()
             uint vert_id = gl_LocalInvocationID.x + i * WORKGROUP_SIZE;
             uint vert_load = min(vert_id, meshlet_vert_count-1);
             uint vert_index = _vertex_indices[meshlet_vert_start + vert_load];
-            process_vertex(_vertices[vert_index], _instances[instance_id], vert_id);
+            process_vertex(_vertices[vert_index], _instances[instance_id], vert_id, meshlet_id);
         }
     }
 

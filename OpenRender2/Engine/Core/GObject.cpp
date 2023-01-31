@@ -6,6 +6,11 @@ GObject::~GObject()
 {
 }
 
+void GObject::Serialize(Json ObjectJson)
+{
+	//TODO: Serialize Object
+}
+
 void GObject::Begin()
 {
 	for(auto Script : OwnedScripts)
@@ -20,6 +25,11 @@ void GObject::Tick(float DeltaTime)
 	{
 		Script->TickScript(DeltaTime);
 	}
+}
+
+void GObject::Destroy()
+{
+	//TODO: Destruction
 }
 
 GObject* GObject::GetNewObject()

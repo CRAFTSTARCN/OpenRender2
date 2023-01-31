@@ -15,6 +15,9 @@
     [[VertexProcessInclude]]
     [[VertexProcessInclude]]
 
+    [[VertexUseParam]]
+    [[VertexUseParam]]
+
     //void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id);
     //Outs:
     //vec3 world_position;
@@ -37,6 +40,10 @@
     [[FragmentProcessInclude]]
         #include "BuiltinModel/DefaultLitUtil.glsl"
     [[FragmentProcessInclude]]
+    [[FragmentUseParam]]
+        [[Buffer]]
+        BaseColor
+    [[FragmentUseParam]]
 
     // void fragment_function(
     //     out vec4 gbuffer_a,

@@ -33,7 +33,7 @@ def param_resolver(params : str):
     warning_info = ""
     used_name = set()
 
-    param_tab = {"Vec" : [], "Scalar" : [], "Tex" : []}
+    param_tab = {"Vec" : [], "Scalar" : [], "Tex" : [], "TexCube" : []}
 
     param_lst = params.split('\n')
     for param in param_lst:
