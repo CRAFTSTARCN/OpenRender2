@@ -22,12 +22,14 @@
 #define RHI_2_VK_CHECKED(VulkanType, RHIComponent, VulkanComponentName) \
     VulkanType *(VulkanComponentName) = (VulkanType*)(RHIComponent);\
     if(!(VulkanComponentName)) {\
+        LOG_ERROR_FUNCTION("Null rhi stuff passed to rhi function, type {0}, rest stuff will not run", #VulkanType);\
         return;\
     }
 
 #define RHI_2_VK_CHECKED_NULL(VulkanType, RHIComponent, VulkanComponentName) \
     VulkanType *(VulkanComponentName) = (VulkanType*)(RHIComponent);\
     if(!(VulkanComponentName)) {\
+        LOG_ERROR_FUNCTION("Null rhi stuff passed to rhi function, type {0}, null will returned", #VulkanType);\
         return nullptr;\
     }
 

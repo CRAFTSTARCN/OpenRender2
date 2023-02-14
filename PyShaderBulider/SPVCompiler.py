@@ -14,7 +14,7 @@ def log_compile_error(cat : str, content : str):
     print("[ERROR][{}]: {}".format(cat, content))
 
 
-def compile_shader_2_spv(shader_path : str, shader_stag : str, output_file : str) :
+def compile_shader_2_spv_glsl(shader_path : str, shader_stag : str, output_file : str) :
     try:
         log_compile_info(shader_path, "Start compiling to spv...")
 

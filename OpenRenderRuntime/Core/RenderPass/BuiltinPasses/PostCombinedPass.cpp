@@ -168,17 +168,22 @@ void PostCombinedPass::UpdateGlobalTexture(const IBLResource& IBL)
 	RHITexture* Irradiance = IBL.IrradianceMap;
 	RHITexture* BRDFLUT = IBL.BRDFLUT;
 
-	if(!SkyBox || !Radiance || !Irradiance || !BRDFLUT)
+	std::vector<TextureWriteInfo> WriteTextures;
+
+	auto PushIfNotNull = [&WriteTextures](RHITexture* Texture, uint32_t BindingPoint)
 	{
-		LOG_WARN_FUNCTION("Global IBL resource not found, may cause error");
-	}
+		if(Texture)
+		{
+			WriteTextures.push_back({Texture, BindingPoint});
+		}	
+	};
+
+	PushIfNotNull(BRDFLUT, 1);
+	PushIfNotNull(Radiance, 2);
+	PushIfNotNull(Irradiance, 3);
+	PushIfNotNull(SkyBox, 4);
 	
-	
-	RHIPtr->WriteDescriptorSetMulti(DeferredShadingGlobal, {
-		{BRDFLUT, 1},
-		{Radiance, 2},
-		{Irradiance, 3},
-		{SkyBox, 4}}, {}, {});
+	RHIPtr->WriteDescriptorSetMulti(DeferredShadingGlobal, WriteTextures, {}, {});
 	
 }
 
@@ -287,6 +292,16 @@ void PostCombinedPass::Initialize()
 
 void PostCombinedPass::DrawPass()
 {
+	IBLResource& CurrentGlobalIBL = ResourcePtr->GlobalIBLResource;
+	RHITexture* SkyBox = CurrentGlobalIBL.SkyBox;
+	RHITexture* Radiance = CurrentGlobalIBL.RadianceMap;
+	RHITexture* Irradiance = CurrentGlobalIBL.IrradianceMap;
+	RHITexture* BRDFLUT = CurrentGlobalIBL.BRDFLUT;
+
+	if(!SkyBox || !Radiance || !Irradiance || !BRDFLUT)
+	{
+		LOG_WARN_FUNCTION("Global IBL resource not found, may cause error");
+	}
 	
 	std::vector<ClearColorInfo> ClearColors(7);
 	for(int i=0; i<5; ++i)

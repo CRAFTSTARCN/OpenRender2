@@ -35,4 +35,6 @@ public:
     static glm::mat4 Transform2Matrix(const Transform& FromTransform);
 
     static float GetDistToPlane(const glm::vec4& Plane, const glm::vec3& Point);
+
+    static Transform GetIdentityTransform();
 };

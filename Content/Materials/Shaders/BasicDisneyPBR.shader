@@ -8,17 +8,31 @@
     Tex BaseColor
 [[PARAM]]
 
+[[VertexUseParam]]
+[[VertexUseParam]]
+
+[[FragmentUseParam]]
+    [[Buffer]]
+    BaseColor
+[[FragmentUseParam]]
+
+[[BlendMode]]
+Opaque
+[[BlendMode]]
+
+[[DoubleSided]]
+false
+[[DoubleSided]]
+
 [[Pass]] 
+    [[PassName]]
+    GBuffer
+    [[PassName]]
     
-    "GBuffer"
-
     [[VertexProcessInclude]]
     [[VertexProcessInclude]]
 
-    [[VertexUseParam]]
-    [[VertexUseParam]]
-
-    //void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id);
+    //void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id, uint meshlet_id);
     //Outs:
     //vec3 world_position;
     //vec3 world_normal;
@@ -40,10 +54,6 @@
     [[FragmentProcessInclude]]
         #include "BuiltinModel/DefaultLitUtil.glsl"
     [[FragmentProcessInclude]]
-    [[FragmentUseParam]]
-        [[Buffer]]
-        BaseColor
-    [[FragmentUseParam]]
 
     // void fragment_function(
     //     out vec4 gbuffer_a,

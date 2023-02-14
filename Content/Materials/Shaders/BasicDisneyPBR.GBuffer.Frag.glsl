@@ -2,6 +2,9 @@
 
 #extension GL_GOOGLE_include_directive : enable
 
+
+//#define _DEBUG_MESHLET
+
 #include "structures.h"
 
 layout(std140, set = 0, binding = 0) uniform _rendering_global_data 
@@ -45,6 +48,7 @@ layout(location = 4) out vec4 gbuffer_e;
 
 
 #include "BuiltinModel/DefaultLitUtil.glsl"
+#include "BuiltinModel/UnlitUtil.glsl"
 
 void fragment_function(
     out vec4 gbuffer_a,
@@ -53,10 +57,10 @@ void fragment_function(
     out vec4 gbuffer_d,
     out vec4 gbuffer_e)
 {
-    DefaultLitGBufferData data;
 #ifdef _DEBUG_MESHLET
-    data.base_color = IN.debug_color; //texture(BaseColor, IN.uv).rgb;
-#endif
+    EncodeUnlitGBuffer(IN.debug_color, gbuffer_c, gbuffer_d); //texture(BaseColor, IN.uv).rgb;
+#else
+    DefaultLitGBufferData data;
     data.base_color = texture(BaseColor, IN.uv).rgb;
     data.ambient_occlusion = 1.0;
     data.normal = normalize(IN.world_normal);
@@ -74,6 +78,7 @@ void fragment_function(
         gbuffer_c,
         gbuffer_d,
         gbuffer_e);
+#endif
 }
 // void fragment_function(
 //     out vec4 gbuffer_a,

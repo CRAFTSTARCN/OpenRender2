@@ -357,7 +357,7 @@ size_t TextureCubeImporter::LoadAsset(Json AssetJson, const std::string& RelPath
 
 	ParamUsage Usage = AssetImporter::AnaParamUsage(AssetJson["UsageTime"].array_items());
 	size_t TexId = RenderResource::TextureRegistry.GetNewId();
-	Texture2DAsset* NewAsset = new Texture2DAsset(TexId);
+	TextureCubeAsset* NewAsset = new TextureCubeAsset(TexId);
 	size_t AssetId = RegistryPtr->RegisterNew(NewAsset, RelPath);
 
 	if(AssetId == AssetRegistry::BAD_GASSET_ID)

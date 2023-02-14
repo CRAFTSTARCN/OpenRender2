@@ -2,7 +2,7 @@
 #include <json11.hpp>
 #include "OpenRender2/Engine/Core/ClassRegister.h"
 
-using Json = json11::Json;
+using json11::Json;
 
 class ObjectClass;
 class GObject;
@@ -12,10 +12,11 @@ class ObjectScript
 
 	DECLARE_OBJECT_CLASS(ObjectScript)
 
+protected:
 	std::string Name;
 
 	GObject* Owner;
-
+	
 	virtual ~ObjectScript();
 
 	ObjectScript();
@@ -32,10 +33,16 @@ public:
 
 	virtual void Register(GObject* InOwner);
 
+	virtual void RegisterName(std::string&& InName);
+
+	virtual void ConstructScript();
+
 	virtual void Begin();
 
 	virtual void TickScript(float DeltaTime);
 
+	virtual void PostTickScript(float DeltaTime);
+	
 	void Destroy();
 
 	virtual void OnDestroy();

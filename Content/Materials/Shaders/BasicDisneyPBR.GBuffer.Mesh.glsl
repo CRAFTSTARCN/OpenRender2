@@ -9,6 +9,8 @@
 #extension GL_EXT_shader_explicit_arithmetic_types_int8  : require
 #extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
 
+//#define _DEBUG_MESHLET
+
 #include "shader_def.h"
 
 #include "structures.h"

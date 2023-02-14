@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <vector>
 
 #include "OpenRenderRuntime/Core/RHI/RHIFrameBuffer.h"
@@ -53,7 +54,7 @@ public:
 
     /*
      * Shader creation api
-     * From shading language source code or spir-v intermediate code
+     * From shading language source code or IL code
      */
     virtual RHIShaderModule* CreateVertexShader(const void* ShaderSource, size_t Size) = 0;
     virtual RHIShaderModule* CreateFragmentShader(const void* ShaderSource, size_t Size) = 0;

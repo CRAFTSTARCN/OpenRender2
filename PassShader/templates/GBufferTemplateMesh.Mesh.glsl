@@ -73,7 +73,12 @@ layout(location=0) out Interpolants
     vec3 world_normal;
     vec3 world_tangent;
     vec2 uv;
+#ifdef _DEBUG_MESHLET
+    vec3 debug_color;
+#endif
 } OUT[];
+
+#include "debug_colorize.inl"
 
 [[INCLUDE_FILES]]
 

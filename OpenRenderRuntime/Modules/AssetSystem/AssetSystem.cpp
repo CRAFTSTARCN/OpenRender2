@@ -4,57 +4,38 @@
 #include <stb_image.h>
 #include <fstream>
 
-#include "Importers/MaterialImporters.h"
-#include "Importers/MeshImporters.h"
-#include "Importers/TextureImporters.h"
+#include "OpenRenderRuntime/Modules/AssetSystem/Importers/LevelAssetImporters.h"
+#include "OpenRenderRuntime/Modules/AssetSystem/Importers/MaterialImporters.h"
+#include "OpenRenderRuntime/Modules/AssetSystem/Importers/MeshImporters.h"
+#include "OpenRenderRuntime/Modules/AssetSystem/Importers/TextureImporters.h"
+#include "OpenRenderRuntime/Util/FileUtil.h"
 #include "OpenRenderRuntime/Util/Logger.h"
 
-std::string AssetSystem::LoadFile2Str(const std::string& FullPath)
-{
-	std::ifstream File;
-	File.open(FullPath, std::ios::in);
-	std::string Str;
-
-	if(!File.is_open())
-	{
-		return Str;
-	}
-
-	File.seekg(0, std::ios::end);
-	std::streamsize Len = File.tellg();
-	File.seekg(0, std::ios::beg);
-
-	char* Buffer = new char[Len + 1]{0};
-	File.read(Buffer, Len);
-	File.close();
-	Str.assign(Buffer);
-	delete[] Buffer;
-	
-	return  Str;
-}
-
-AssetSystem::AssetSystem(const AssetSystemCreateParam& Param)
+AssetSystem::AssetSystem()
 	: SwapDataCenterPtr(nullptr),
 	  Registry(1024)
 {
-	Config.BasePath = Param.BasePath;
-	Config.ShaderPlatform = Param.ShaderPlatform;
-	if(Param.TextureFlip)
+	
+}
+
+void AssetSystem::Init(const AssetSystemInitParam& InitParam)
+{
+	Config.BasePath = InitParam.BasePath;
+	Config.ShaderPlatform = InitParam.ShaderPlatform;
+	if(InitParam.TextureFlip)
 	{
 		stbi_set_flip_vertically_on_load(true);
 	}
-}
-
-void AssetSystem::Init(RenderSwapDataCenter* InSwapDataCenter)
-{
-	SwapDataCenterPtr = InSwapDataCenter;
+	
+	SwapDataCenterPtr = InitParam.SwapDataCenter;
 	AssetImportData CreateData {&Registry, SwapDataCenterPtr, &Config};
 	Importers = {
 		{"Texture2D", new Texture2DImporter{CreateData}},
 		{"TextureCube", new TextureCubeImporter{CreateData}},
 		{"MaterialBase", new MaterialBaseImporter{CreateData}},
 		{"MaterialInstance", new MaterialInstanceImporter{CreateData}},
-		{"StaticMeshPack", new MeshPackageImporter{CreateData}}
+		{"StaticMeshPack", new MeshPackageImporter{CreateData}},
+		{"Level", new LevelAssetImporter{CreateData}}
 	};
 
 	auto CascadeLoading = [this](const std::string& RelPath)
@@ -70,7 +51,7 @@ size_t AssetSystem::Import(const std::string& RelPath)
 {
 	std::string Err;
 	std::string FullPath = (std::filesystem::path(Config.BasePath) / RelPath).generic_string();
-	Json AssetJson = Json::parse(LoadFile2Str(FullPath), Err);
+	Json AssetJson = Json::parse(FileUtil::LoadFile2Str(FullPath), Err);
 
 	if(AssetJson.is_null())
 	{
@@ -128,5 +109,19 @@ AssetObject* AssetSystem::GetAssetById(size_t Id)
 const AssetObject* AssetSystem::GetAssetById(size_t Id) const
 {
 	return const_cast<AssetSystem*>(this)->Registry.GetObjectById(Id);
+}
+
+void AssetSystem::Terminate(bool SendDestroyToSwap)
+{
+	if(SendDestroyToSwap)
+	{
+		std::vector<AssetObject*> AllAsset = Registry.GetAllAsset();
+		for(auto Asset : AllAsset)
+		{
+			Unload(Asset);
+		}
+	}
+
+	Registry.UnregisterAll(false);
 }
 

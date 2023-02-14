@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
-
+#include <string>
 #include "OpenRenderRuntime/Core/RHI/RHIDescriptor.h"
 #include "OpenRenderRuntime/Core/RHI/RHIPipeline.h"
 

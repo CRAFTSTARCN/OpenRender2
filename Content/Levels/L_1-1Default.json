@@ -1,5 +1,5 @@
 {
-    "AssetTyp" : "Level",
+    "AssetType" : "Level",
 
     "Objects" : 
     [
@@ -12,7 +12,7 @@
                     "Name" : "Mesh",
                     "Parent" : null,
                     "MaterialOverride": null,
-                    "StaticMesh" : "./Mesh/Bunny.json",
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 0,
                     "Blocker" : true,
                     "Transform" : 
@@ -41,7 +41,7 @@
                     "Type" : "StaticMeshComponent",
                     "Name" : "MeshEye",
                     "Parent" : 0,
-                    "StaticMesh" : "./Mesh/Bunny.json",
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 1,
                     "Blocker" : true,
                     "MaterialOverride" : null,
@@ -49,6 +49,7 @@
                 }
             ]
         }
+
     ],
 
     "Skybox" :  
@@ -68,13 +69,32 @@
         },
         "Rotation" : 
         {
-            "Pitch" : 0.0,
-            "Yaw" : 0.0,
-            "Row" : 0.0
+            "X" : 0.0,
+            "Y" : -90.0,
+            "Z" : 0.0
         },
 
         "Near" : 0.1,
         "Far" : 100000,
-        "FOVV" : 75.0
+        "FOVV" : 75.0,
+
+        "CameraMoveSpeed" : 70.0,
+        "CameraLookSpeed" : 0.1
+    },
+    "DirectionalLight":
+    {
+        "Color" : 
+        {
+            "R" : 0.7,
+            "G" : 0.8,
+            "B" : 1.0,
+            "A" : 1.0
+        },
+        "Direction" : 
+        {
+            "X" : 0.0,
+            "Y" : 0.72,
+            "Z" : 0.72
+        }
     }
 }

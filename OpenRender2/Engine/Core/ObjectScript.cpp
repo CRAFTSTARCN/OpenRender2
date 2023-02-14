@@ -10,12 +10,21 @@ ObjectScript::~ObjectScript() = default;
 
 void ObjectScript::Serialize(Json ScriptJson)
 {
-	
+	Name = ScriptJson["Name"].string_value();
 }
 
 void ObjectScript::Register(GObject* InOwner)
 {
 	Owner = InOwner;
+}
+
+void ObjectScript::RegisterName(std::string&& InName)
+{
+	Name = std::move(InName);
+}
+
+void ObjectScript::ConstructScript()
+{
 }
 
 void ObjectScript::Begin()
@@ -25,6 +34,10 @@ void ObjectScript::Begin()
 void ObjectScript::TickScript(float DeltaTime)
 {
 	
+}
+
+void ObjectScript::PostTickScript(float DeltaTime)
+{
 }
 
 void ObjectScript::Destroy()

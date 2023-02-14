@@ -16,7 +16,7 @@ add_subdirectory(assimp)
 set(BUILD_SHARED_LIBS OFF)
 set_target_properties(assimp PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 set_target_properties(UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
-set_target_properties(zlibstatic PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
+#set_target_properties(zlibstatic PROPERTIES FOLDER ${THIRD_PARTY_FOLDER}/assimp)
 
 set(JSON11_DIR ${THIRD_PARTY_DIR}/json11)
 add_library(json11 ${JSON11_DIR}/json11.cpp)

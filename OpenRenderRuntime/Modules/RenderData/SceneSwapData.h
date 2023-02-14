@@ -45,6 +45,9 @@ class DirectionalLightData : public RenderSwapData
 	
 };
 
+/*
+ * If not set, use BAD_TEXTURE_ID
+ */
 class EnvironmentTextureData : public RenderSwapData
 {
 	

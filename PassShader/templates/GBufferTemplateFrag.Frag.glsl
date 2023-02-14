@@ -4,7 +4,7 @@
 
 #include "structures.h"
 
-layout(std140, set = 0, binding = 0) uniform __rendering_global_data 
+layout(std140, set = 0, binding = 0) uniform _rendering_global_data 
 #include "global_data_uniform.inl"
 
 
@@ -16,6 +16,11 @@ layout(location=0) in Interpolants
     vec3 world_normal;
     vec3 world_tangent;
     vec2 uv;
+
+#ifdef _DEBUG_MESHLET
+    vec3 debug_color;
+#endif
+
 } IN;
 
 layout(location = 0) out vec4 gbuffer_a;

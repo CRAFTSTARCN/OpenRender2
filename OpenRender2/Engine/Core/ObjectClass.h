@@ -17,5 +17,6 @@ class ObjectClass
 public:
 
 	ObjectScript* GetNewObject() const;
-		
+
+	static ObjectClass* GetClassByName(const std::string& ClassName);
 };

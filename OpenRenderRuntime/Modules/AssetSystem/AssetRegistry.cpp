@@ -78,3 +78,31 @@ AssetObject* AssetRegistry::TryGetObjectByPath(const std::string& Path)
 	}
 	return GetObjectById(Id);
 }
+
+void AssetRegistry::UnregisterAll(bool InternalDelete)
+{
+	if(InternalDelete)
+	{
+		for(auto Asset : AssetPool)
+		{
+			delete Asset;
+		}
+	}
+
+	GAssetIDAllocator.ResetAll();
+}
+
+std::vector<AssetObject*> AssetRegistry::GetAllAsset()
+{
+	std::vector<AssetObject*> Assets;
+	Assets.reserve(AssetPool.size() >> 1);
+	for(auto Asset : AssetPool)
+	{
+		if(Asset)
+		{
+			Assets.push_back(Asset);
+		}
+	}
+
+	return  Assets;
+}

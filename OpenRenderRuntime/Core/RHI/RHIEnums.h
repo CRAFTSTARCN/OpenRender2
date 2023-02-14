@@ -130,7 +130,8 @@ enum PipelineStageBit
 	PipelineStageBit_Host         = 1 << 11,
 
 	PipelineStageBit_All_Graphics = 1 << 12,
-	PipelineStageBit_All_Command  = 1 << 13
+	PipelineStageBit_All_Command  = 1 << 13,
+	PipelineStageBit_Indirect     = 1 << 14
 };
 typedef uint32_t PipelineStage;
 
@@ -266,14 +267,16 @@ typedef uint32_t ShaderStageType;
  */
 enum DescriptorType
 {
-	DescriptorType_Texture = 0,
+	DescriptorType_Texture = 0, //Represent texture and sampler
 	DescriptorType_Storage_Image = 1,
 	DescriptorType_Uniform_Buffer = 2,
 	DescriptorType_Storage_Buffer = 3,
 	DescriptorType_Uniform_Buffer_Dynamic = 4,
 	DescriptorType_Storage_Buffer_Dynamic = 5,
 	DescriptorType_Input_Attachment = 6,
-	DescriptorType_Inline_Uniform = 7
+	
+	DescriptorType_Texture_Image = 7,
+	DescriptorType_Sampler = 8
 };
 
 /*

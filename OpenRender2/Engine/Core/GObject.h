@@ -5,6 +5,15 @@
 #include "OpenRender2/Engine/Core/ObjectScript.h"
 #include "OpenRenderRuntime/Util/AutoIncreaseIdAllocator.h"
 
+class LLevel;
+
+enum GObjectStatus
+{
+	GObjectStatus_Prepare,
+	GObjectStatus_Active,
+	GObjectStatus_PendingKill
+};
+
 class GObject final
 {
 
@@ -14,9 +23,19 @@ class GObject final
 	
 	std::unordered_set<ObjectScript*> OwnedScripts;
 
+	std::vector<ObjectScript*> TickArray;
+
+	LLevel* InLevel = nullptr;
+
+	GObjectStatus Status = GObjectStatus_Prepare;
+
 	GObject();
 
 	~GObject();
+
+	ObjectScript* CreateAndSerializeSingleScript(Json SingleScriptJson);
+
+	void Begin();
 	
 public:
 
@@ -26,19 +45,40 @@ public:
 	GObject& operator=(GObject&&) = delete;
 	
 	void Serialize(Json ObjectJson);
-
-	void Begin();
-
+	
 	void Tick(float DeltaTime);
+
+	void PostTick(float DeltaTime);
 
 	void Destroy();
 
 	/*
+	 * Should only call by level
+	 */
+	void LevelFinishDestroy();
+	
+	LLevel* CurrentLevel();
+
+	void SignToLevel(LLevel* Level);
+
+	void Activate();
+	
+	GObjectStatus GetStatus();
+	
+	/*
 	 * The data in script will remain as default
 	 */
-	void AddNewScript(ObjectClass* ScriptClass, std::string&& Name = std::string(""));
+	ObjectScript* AddNewScript(ObjectClass* ScriptClass, std::string&& InName = std::string(""));
 
-	void AddScript(ObjectScript* Script);
+	bool AddScript(ObjectScript* Script);
+
+	void RemoveScript(ObjectScript* Script);
+
+	/*
+	 * Convenience function, equals to Script->Destroy(); RemoveScript(Script);
+	 * But ensure the script belongs to this object
+	 */
+	void DestroyAndRemove(ObjectScript* Script);
 	
 	static GObject* GetNewObject();
 };

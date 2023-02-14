@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <string>
 #include <unordered_map>
 
 #include "OpenRenderRuntime/Core/RHI/RHISemaphore.h"
