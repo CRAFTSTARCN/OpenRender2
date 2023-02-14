@@ -7,29 +7,19 @@
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialBase.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialInstance.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
+#include "OpenRenderRuntime/Util/FileUtil.h"
 #include "OpenRenderRuntime/Util/Logger.h"
 
 std::vector<std::byte> MaterialBaseImporter::LoadShader2Byte(const std::string& RelPath)
 {
 	std::string FullPath = (std::filesystem::path(ConfigPtr->BasePath) / RelPath).generic_string()
 	                       + "." + ConfigPtr->ShaderPlatform;
-	std::ifstream In;
-	std::vector<std::byte> Bytes;
-	In.open(FullPath, std::ios::in|std::ios::binary);
-
-	if(!In.is_open())
+	std::vector<std::byte> Bytes = FileUtil::LoadFile2Byte(FullPath);
+	
+	if(Bytes.empty())
 	{
 		LOG_ERROR_FUNCTION("Cannot open shader file for pass, given path: {0} platform {1}", RelPath, ConfigPtr->ShaderPlatform);
-		return {};
 	}
-	
-	In.seekg(0, std::ios::end);
-	std::streamsize Len = In.tellg();
-	In.seekg(0, std::ios::beg);
-
-	Bytes.resize(Len);
-	In.read((char*)Bytes.data(), Len);
-	In.close();
 	
 	return Bytes;
 }

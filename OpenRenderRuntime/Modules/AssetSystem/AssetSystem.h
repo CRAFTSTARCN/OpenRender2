@@ -6,11 +6,12 @@
 #include "OpenRenderRuntime/Modules/RenderData/RenderSwapDataCenter.h"
 #include "OpenRenderRuntime/Modules/AssetSystem/AssetSystemConfig.h"
 
-struct AssetSystemCreateParam
+struct AssetSystemInitParam
 {
 	std::string BasePath;
 	std::string ShaderPlatform;
-
+	RenderSwapDataCenter* SwapDataCenter;
+	
 	bool TextureFlip = false;
 };
 
@@ -26,13 +27,11 @@ class AssetSystem
 
 	std::unordered_map<std::string, AssetImporter*> Importers;
 
-	std::string LoadFile2Str(const std::string& FullPath);
-
 public:
 	
-	AssetSystem(const AssetSystemCreateParam& Param);
+	AssetSystem();
 
-	void Init(RenderSwapDataCenter* InSwapDataCenter);
+	void Init(const AssetSystemInitParam& InitParam);
 
 	size_t Import(const std::string& RelPath);
 
@@ -49,5 +48,5 @@ public:
 
 	const AssetObject* GetAssetById(size_t Id) const;
 
-	//void ClearAll();
+	void Terminate(bool SendDestroyToSwap = false);
 };

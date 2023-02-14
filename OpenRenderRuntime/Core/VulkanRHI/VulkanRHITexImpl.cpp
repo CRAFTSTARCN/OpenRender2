@@ -28,7 +28,7 @@ RHITexture* VulkanRHI::CreateTexture2DManualMipmap(uint32_t Width, uint32_t Heig
     }
     else if(TextureCreateType == TextureType_Array)
     {
-        CreateFlag = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+        //CreateFlag = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
         ImageViewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     }
     
@@ -160,7 +160,7 @@ RHITexture* VulkanRHI::CreateTexture2DAutoMipmap(uint32_t Width, uint32_t Height
     }
     else if(TextureCreateType == TextureType_Array)
     {
-        CreateFlag = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+        //CreateFlag = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
         ImageViewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 
     }

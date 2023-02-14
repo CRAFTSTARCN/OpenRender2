@@ -1,5 +1,5 @@
 {
     "ContentFolder" : "Content",
-    "DefaultLevel" : "L_Level0_0.json",
-    "BRDF_LUT" : "./Texture/T_BRDF.json"
+    "DefaultLevel" : "./Levels/L_1-1Default.json",
+    "BRDFLUT" : "./Texture/T_BRDF_LUT.json"
 }

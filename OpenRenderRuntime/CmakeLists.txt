@@ -1,9 +1,10 @@
 set(TARGET_NAME OpenRenderRuntime)
 
 file(GLOB_RECURSE HEADER_FILE_RT "*.h")
+file(GLOB_RECURSE HEADER_PLUS_FILE_RT "*.hPP")
 file(GLOB_RECURSE SOURCE_FILE_RT "*.cpp")
 
-add_library(${TARGET_NAME} ${HEADER_FILE_RT} ${SOURCE_FILE_RT})
+add_library(${TARGET_NAME} ${HEADER_FILE_RT} ${HEADER_PLUS_FILE_RT} ${SOURCE_FILE_RT})
 
 target_include_directories(${TARGET_NAME} PUBLIC ${ROOT_DIR})
 

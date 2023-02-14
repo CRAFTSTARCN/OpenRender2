@@ -167,3 +167,12 @@ float ORMath::GetDistToPlane(const glm::vec4& Plane, const glm::vec3& Point)
     return glm::dot(glm::vec3(Plane), Point) - Plane.w;
 }
 
+Transform ORMath::GetIdentityTransform()
+{
+    return Transform {
+        glm::vec3(0.0f, 0.0f ,0.0f),
+        glm::quat(),
+        glm::vec3(1.0f,1.0f,1.0f)
+    };
+}
+

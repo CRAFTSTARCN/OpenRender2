@@ -26,5 +26,6 @@ public:
 	AssetObject* GetObjectById(size_t Id);
 	AssetObject* TryGetObjectByPath(const std::string& Path);
 
-	//void UnregisterAndDestroyAll();
+	void UnregisterAll(bool InternalDelete = true);
+	std::vector<AssetObject*> GetAllAsset();
 };

@@ -1,5 +1,6 @@
 ﻿#include "Barrier.h"
 
+#include "Logger.h"
 Barrier::Barrier(uint32_t Total) : TotalThread(Total), Count(0), Reach(0)
 {
 }
@@ -20,6 +21,6 @@ void Barrier::Wait()
 	}
 	else
 	{
-		CV.wait(ScopeLock, [this](){return this->Reach == 1;});
+		CV.wait(ScopeLock);
 	}
 }

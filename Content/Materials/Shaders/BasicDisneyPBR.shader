@@ -8,14 +8,31 @@
     Tex BaseColor
 [[PARAM]]
 
+[[VertexUseParam]]
+[[VertexUseParam]]
+
+[[FragmentUseParam]]
+    [[Buffer]]
+    BaseColor
+[[FragmentUseParam]]
+
+[[BlendMode]]
+Opaque
+[[BlendMode]]
+
+[[DoubleSided]]
+false
+[[DoubleSided]]
+
 [[Pass]] 
+    [[PassName]]
+    GBuffer
+    [[PassName]]
     
-    "GBuffer"
-
     [[VertexProcessInclude]]
     [[VertexProcessInclude]]
 
-    //void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id);
+    //void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id, uint meshlet_id);
     //Outs:
     //vec3 world_position;
     //vec3 world_normal;

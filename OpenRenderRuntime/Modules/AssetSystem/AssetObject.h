@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <string>
+
 #include "OpenRenderRuntime/Util/GUIDAllocator.h"
 
 #define DEFINE_ASSET_TYPE(AssetTypeName)\

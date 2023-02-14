@@ -1,9 +1,10 @@
 set(TARGET_NAME OpenRender2)
 
 file(GLOB_RECURSE HEADER_FILE_APP "*.h")
+file(GLOB_RECURSE HEADER_PLUS_FILE_APP "*.hpp")
 file(GLOB_RECURSE SOURCE_FILE_APP "*.cpp")
 
-add_executable(${TARGET_NAME} ${HEADER_FILE_APP} ${SOURCE_FILE_APP})
+add_executable(${TARGET_NAME} ${HEADER_FILE_APP} ${HEADER_PLUS_FILE_APP} ${SOURCE_FILE_APP})
 
 target_link_libraries(${TARGET_NAME} OpenRenderRuntime)
 

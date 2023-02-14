@@ -73,12 +73,17 @@ layout(location=0) out Interpolants
     vec3 world_normal;
     vec3 world_tangent;
     vec2 uv;
+#ifdef _DEBUG_MESHLET
+    vec3 debug_color;
+#endif
 } OUT[];
+
+#include "debug_colorize.inl"
 
 [[INCLUDE_FILES]]
 
 [[MESH_VERTEX_PROCESSOR]]
-//void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id);
+//void process_vertex(in VertexStructure vertex, in InstanceData instance, uint vertex_id, uint meshlet_id);
 
 void main() 
 {
@@ -100,7 +105,7 @@ void main()
             uint vert_id = gl_LocalInvocationID.x + i * WORKGROUP_SIZE;
             uint vert_load = min(vert_id, meshlet_vert_count-1);
             uint vert_index = _vertex_indices[meshlet_vert_start + vert_id];
-            process_vertex(_vertices[vert_id], _instances[instance_id], vert_id);
+            process_vertex(_vertices[vert_index], _instances[instance_id], vert_id, meshlet_id);
         }
     }
 

@@ -7,6 +7,12 @@ class RenderConfig
     
 public:
 
+    RenderConfig(const RenderConfig&) = delete;
+    RenderConfig(RenderConfig&&) = delete;
+
+    RenderConfig& operator=(const RenderConfig&) = delete;
+    RenderConfig& operator=(const RenderConfig&&) = delete;
+
     static RenderConfig& Get();
 
     //Only initial valid!!!!!!
@@ -18,6 +24,8 @@ public:
     
     std::string RenderWindowName = "Open Render 2";
 
+    //Long term valid
+
     std::string RootDir = "";
     
     std::string PipelineShaderDir = "./PassShader/";
@@ -25,6 +33,9 @@ public:
 
     size_t GlobalDCBufferSize = 1 << 22;
     
-    //VulkanRHI Setting
+    /*
+     * Vulkan rhi setting
+     */
+	//Initial valid
     bool VKEnableValidationLayer = true;
 };

@@ -65,24 +65,33 @@ EnvironmentDataResolver::EnvironmentDataResolver(const RenderComponentsData& InD
 void EnvironmentDataResolver::ResolveData(RenderSwapData* Data)
 {
 	DYNAMIC_CAST_DATA_CHECK(EnvironmentTextureData, Data, EnvData)
-	auto FindAndSetTex = [this](size_t Id, RHITexture*& Texture)
+	auto FindAndSetTex = [this](size_t Id, RHITexture*& NewTexture, RHITexture*& StatTexture)
 	{
+		if(Id == RenderResource::BAD_TEXTURE_ID)
+		{
+			NewTexture = nullptr;
+			return;
+		}
 		if(auto Iter = ResourcePtr->Textures.find(Id); Iter == ResourcePtr->Textures.end())
 		{
 			LOG_WARN_FUNCTION("No texture id {}, setted for environment mapping data");
+			NewTexture = nullptr;
 		}
 		else
 		{
-			Texture = Iter->second;
+			NewTexture = Iter->second;
+			StatTexture = NewTexture;
 		}
 	};
-	IBLResource& IBL = ResourcePtr->GlobalIBLResource;
-	FindAndSetTex(EnvData->SkyboxId, IBL.SkyBox);
-	FindAndSetTex(EnvData->RadianceMapId, IBL.RadianceMap);
-	FindAndSetTex(EnvData->IrradianceMapId, IBL.IrradianceMap);
-	FindAndSetTex(EnvData->BRDFLUTId, IBL.BRDFLUT);
 
-	RenderPtr->OnUpdateGlobalIBLResource(IBL);
+	IBLResource NewIBL;
+	IBLResource& IBL = ResourcePtr->GlobalIBLResource;
+	FindAndSetTex(EnvData->SkyboxId, NewIBL.SkyBox, IBL.SkyBox);
+	FindAndSetTex(EnvData->RadianceMapId, NewIBL.RadianceMap, IBL.RadianceMap);
+	FindAndSetTex(EnvData->IrradianceMapId, NewIBL.IrradianceMap, IBL.IrradianceMap);
+	FindAndSetTex(EnvData->BRDFLUTId, NewIBL.BRDFLUT, IBL.BRDFLUT);
+
+	RenderPtr->OnUpdateGlobalIBLResource(NewIBL);
 	
 	delete Data;
 }

@@ -8,7 +8,18 @@ RenderSwapDataCenter::RenderSwapDataCenter()
 	RenderSide = &Back;
 }
 
-RenderSwapDataCenter::~RenderSwapDataCenter() = default;
+RenderSwapDataCenter::~RenderSwapDataCenter()
+{
+	for(auto Data : Front)
+	{
+		delete Data;
+	}
+
+	for(auto Data : Back)
+	{
+		delete Data;
+	}
+}
 
 std::vector<RenderSwapData*>& RenderSwapDataCenter::GetLogicSide()
 {

@@ -88,7 +88,7 @@ public:
         Reuse.push(Id);
     }
 
-    void DeallocateAll()
+    void ResetAll()
     {
         Current = IdStart;
         std::stack<size_t>().swap(Reuse);
