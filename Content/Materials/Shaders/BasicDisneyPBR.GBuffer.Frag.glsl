@@ -60,6 +60,7 @@ void fragment_function(
 #ifdef _DEBUG_MESHLET
     EncodeUnlitGBuffer(IN.debug_color, gbuffer_c, gbuffer_d); //texture(BaseColor, IN.uv).rgb;
 #else
+    
     DefaultLitGBufferData data;
     data.base_color = texture(BaseColor, IN.uv).rgb;
     data.ambient_occlusion = 1.0;
@@ -72,13 +73,14 @@ void fragment_function(
     data.specular = Specular;
     data.roughness = Roughness;
     EncodeDefaultLitGBuffer(
-        data, 
-        gbuffer_a,
-        gbuffer_b,
-        gbuffer_c,
-        gbuffer_d,
-        gbuffer_e);
+    data, 
+    gbuffer_a,
+    gbuffer_b,
+    gbuffer_c,
+    gbuffer_d,
+    gbuffer_e);
 #endif
+
 }
 // void fragment_function(
 //     out vec4 gbuffer_a,

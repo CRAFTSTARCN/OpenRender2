@@ -59,7 +59,6 @@ struct Task
     uint base_id;
     uint8_t offset_id[MESHLET_SPAWN_PER_TASK];
     uint8_t instance_id[MESHLET_SPAWN_PER_TASK];
-
 };
 
 taskPayloadSharedEXT Task IN;
@@ -103,7 +102,7 @@ void process_vertex(in VertexStructure vertex, in InstanceData instance, uint ve
 
 void main() 
 {    
-    uint meshlet_id = IN.base_id + IN.offset_id[gl_WorkGroupID.x];
+    uint meshlet_id = (IN.base_id + IN.offset_id[gl_WorkGroupID.x]) % _meshlet_count;
     uint meshlet_vert_count = _meshlets[meshlet_id].VertexAndPrimCount & 0xffff;
     uint meshlet_prim_count = _meshlets[meshlet_id].VertexAndPrimCount >> 16;
     uint meshlet_vert_start = _meshlets[meshlet_id].VertexBegin;

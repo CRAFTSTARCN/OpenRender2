@@ -87,7 +87,7 @@ layout(location=0) out Interpolants
 
 void main() 
 {
-    uint meshlet_id = IN.base_id + IN.offset_id[gl_WorkGroupID.x];
+    uint meshlet_id = (IN.base_id + IN.offset_id[gl_WorkGroupID.x]) % _meshlet_count;
     uint meshlet_vert_count = _meshlets[meshlet_id].VertexAndPrimCount & 0xffff;
     uint meshlet_prim_count = _meshlets[meshlet_id].VertexAndPrimCount >> 16;
     uint meshlet_vert_start = _meshlets[meshlet_id].VertexBegin;

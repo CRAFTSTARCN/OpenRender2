@@ -48,6 +48,53 @@
                     "Transform" : null
                 }
             ]
+        },
+
+        {
+            "Name" : "Bunny_1",
+            "Scripts" : 
+            [
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "Mesh",
+                    "Parent" : null,
+                    "MaterialOverride": null,
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
+                    "PackIndex" : 0,
+                    "Blocker" : true,
+                    "Transform" : 
+                    {
+                        "Translate" : 
+                        {
+                            "X" : 50,
+                            "Y" : -10.0,
+                            "Z" : -50
+                        },
+                        "Rotation" : 
+                        {
+                            "X" : -90.0,
+                            "Y" : -45.0,
+                            "Z" : 0.0
+                        },
+                        "Scale" : 
+                        {
+                            "X" : 20.0,
+                            "Y" : 20.0,
+                            "Z" : 20.0
+                        }
+                    }
+                },
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "MeshEye",
+                    "Parent" : 0,
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
+                    "PackIndex" : 1,
+                    "Blocker" : true,
+                    "MaterialOverride" : null,
+                    "Transform" : null
+                }
+            ]
         }
 
     ],

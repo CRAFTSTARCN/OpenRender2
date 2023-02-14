@@ -57,8 +57,8 @@ void main()
     
     uint base_id = gl_WorkGroupID.x * WORKGROUP_SIZE;
     uint local_id = gl_LocalInvocationID.x;
-
     uint instance_id = gl_GlobalInvocationID.x / _meshlet_count;
+
     uint meshlet_index = gl_GlobalInvocationID.x % _meshlet_count;
 
     vec3 c = vec3(_meshlets[meshlet_index].CenterX,
@@ -69,12 +69,13 @@ void main()
                   _meshlets[meshlet_index].ExtendY,
                   _meshlets[meshlet_index].ExtendZ);
 
-    bool render = (instance_id < _darw_instance_count); /*&&
-                  early_culling(c, e, _instances[instance_id].mat_model, camera_frustum);*/
+    bool render = (instance_id < _darw_instance_count) &&
+                  early_culling(c, e, _instances[instance_id].mat_model, camera_frustum);
     
     uvec4 vote = subgroupBallot(render);
     uint meshlet_num = subgroupBallotBitCount(vote);
     uint offset_index = subgroupBallotExclusiveBitCount(vote);
+
 
     if(render) 
     {
@@ -86,6 +87,6 @@ void main()
     {
         OUT.base_id = base_id;
     }    
-
+    barrier();
     EmitMeshTasksEXT(meshlet_num, 1, 1);
 }
