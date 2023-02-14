@@ -175,6 +175,7 @@ void OpenRenderEngine::EngineLoop()
 			RenderSystem->Tick(this->Timer.GetDeltaTime());
 			this->LogicRenderBarrier.Wait();
 		}
+		LOG_INFO("Render Thread Terminate");
 	};
 
 	RenderThread.Run(RenderThreadFunc);

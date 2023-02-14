@@ -12,10 +12,11 @@ void MeshDataCreateResolver::ResolveData(RenderSwapData* Data)
 	DYNAMIC_CAST_DATA_CHECK(MeshCreateData, Data, MeshData)
 	MeshletPackage& Package = MeshData->MeshletPackage;
 
+	/*
 	LOG_INFO_FUNCTION(
 		"AABB: ({0}, {1}, {2}), ({3}, {4}, {5})",
 		MeshData->MeshOriginalAABB.Center.x, MeshData->MeshOriginalAABB.Center.y, MeshData->MeshOriginalAABB.Center.z,
-		MeshData->MeshOriginalAABB.Extend.x, MeshData->MeshOriginalAABB.Extend.y, MeshData->MeshOriginalAABB.Extend.z);
+		MeshData->MeshOriginalAABB.Extend.x, MeshData->MeshOriginalAABB.Extend.y, MeshData->MeshOriginalAABB.Extend.z);*/
 	
 	if(ResourcePtr->Meshes.find(MeshData->MeshId) != ResourcePtr->Meshes.end())
 	{
