@@ -272,10 +272,10 @@ void LLevel::Begin()
 
 	//Setup skybox data
 	EnvironmentTextureData* EnvData = new EnvironmentTextureData;
-	EnvData->SkyboxId = SkyboxAsset ? SkyboxAsset->GetTexId() : RenderResource::BAD_TEXTURE_ID;
-	EnvData->RadianceMapId = RadianceAsset ? RadianceAsset->GetTexId() : RenderResource::BAD_TEXTURE_ID;
-	EnvData->IrradianceMapId = IrradianceAsset ? IrradianceAsset->GetTexId() : RenderResource::BAD_TEXTURE_ID;
-	EnvData->BRDFLUTId = RenderResource::BAD_TEXTURE_ID;
+	EnvData->SkyboxId = SkyboxAsset ? SkyboxAsset->GetTexId() : RenderTexture::BAD_TEXTURE_ID;
+	EnvData->RadianceMapId = RadianceAsset ? RadianceAsset->GetTexId() : RenderTexture::BAD_TEXTURE_ID;
+	EnvData->IrradianceMapId = IrradianceAsset ? IrradianceAsset->GetTexId() : RenderTexture::BAD_TEXTURE_ID;
+	EnvData->BRDFLUTId = RenderTexture::BAD_TEXTURE_ID;
 
 	GEngine->GetSwapDataCenter()->GetLogicSide().push_back(EnvData);
 	

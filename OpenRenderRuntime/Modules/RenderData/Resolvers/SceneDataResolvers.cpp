@@ -65,9 +65,9 @@ EnvironmentDataResolver::EnvironmentDataResolver(const RenderComponentsData& InD
 void EnvironmentDataResolver::ResolveData(RenderSwapData* Data)
 {
 	DYNAMIC_CAST_DATA_CHECK(EnvironmentTextureData, Data, EnvData)
-	auto FindAndSetTex = [this](size_t Id, RHITexture*& NewTexture, RHITexture*& StatTexture)
+	auto FindAndSetTex = [this](size_t Id, RenderTexture*& NewTexture, RenderTexture*& StatTexture)
 	{
-		if(Id == RenderResource::BAD_TEXTURE_ID)
+		if(Id == RenderTexture::BAD_TEXTURE_ID)
 		{
 			NewTexture = nullptr;
 			return;

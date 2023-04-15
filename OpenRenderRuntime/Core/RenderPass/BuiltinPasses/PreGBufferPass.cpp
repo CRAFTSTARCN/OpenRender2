@@ -13,14 +13,14 @@
 void PreGBufferPass::CreateRenderPass()
 {
 	AttachmentDescription ColorAttachment {};
-	ColorAttachment.Format = TexturePixelFormat_RGBA8;
+	ColorAttachment.Format = RHIFormat_RGBA8;
 	ColorAttachment.Onload = AttachmentLoadOperation_Clear;
 	ColorAttachment.OnStore = AttachmentStoreOperation_Store;
 	ColorAttachment.InitialLayout = TexImageLayout_Undefined;
 	ColorAttachment.FinalLayout = TexImageLayout_Color_Attachment;
 
 	AttachmentDescription DepthStencilAttachment {};
-	DepthStencilAttachment.Format = TexturePixelFormat_D32_FLOAT;
+	DepthStencilAttachment.Format = RHIFormat_D32_FLOAT;
 	DepthStencilAttachment.Onload = AttachmentLoadOperation_Clear;
 	DepthStencilAttachment.OnStore = AttachmentStoreOperation_Store;
 	DepthStencilAttachment.InitialLayout = TexImageLayout_Undefined;
@@ -63,12 +63,12 @@ void PreGBufferPass::CreateFrameBuffer(uint32_t Width, uint32_t Height)
 	FrameBuffer = RHIPtr->CreateFrameBuffer(
 		Pass,
 		{
-			GlobalGBufferRef.GBufferA->DefaultView,
-			GlobalGBufferRef.GBufferB->DefaultView,
-			GlobalGBufferRef.GBufferC->DefaultView,
-			GlobalGBufferRef.GBufferD->DefaultView,
-			GlobalGBufferRef.GBufferE->DefaultView,
-			ResourcePtr->DepthStencilAttachment->DefaultView},
+			GlobalGBufferRef.GBufferA->DefaultTextureView,
+			GlobalGBufferRef.GBufferB->DefaultTextureView,
+			GlobalGBufferRef.GBufferC->DefaultTextureView,
+			GlobalGBufferRef.GBufferD->DefaultTextureView,
+			GlobalGBufferRef.GBufferE->DefaultTextureView,
+			ResourcePtr->DepthStencilAttachment->DefaultTextureView},
 		Width,
 		Height,
 		1);
@@ -194,7 +194,7 @@ void PreGBufferPass::Initialize()
 
 void PreGBufferPass::DrawPass()
 {
-	RHIRenderingPhase* Phase = RHIPtr->GetRenderPhase(RenderingTaskQueue_Graphics);
+	RHICommandList* Phase = RHIPtr->GetCommandList(RenderingTaskQueue_Graphics);
 	std::vector<ClearColorInfo> ClearColors(6);
 
 	for(size_t i = 0; i < 5; ++i)
@@ -301,7 +301,7 @@ void PreGBufferPass::DrawPass()
 	RHIPtr->EndRenderPass(Phase);
 
 	static size_t FrameNum = 0;
-	RHIPtr->SubmitRenderingPhase(Phase, {}, {/*SignaledSemaphore*/} );
+	RHIPtr->SubmitCommandList(Phase, {}, {/*SignaledSemaphore*/} );
 	++FrameNum;
 }
 

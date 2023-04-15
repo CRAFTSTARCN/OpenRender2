@@ -4,12 +4,13 @@
 
 #include <cassert>
 
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderImageAttachment.h"
+#include "VulkanRHITexture.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderTarget.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImage.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImageView.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITextureView.h"
 
 #define COMPILE_VULKAN_VERSION VK_API_VERSION_1_3
-#define DESCRIPTOR_POOL_SIZE 5
+#define DESCRIPTOR_POOL_SIZE 7
 
 void VulkanRHI::InitializeVulkan()
 {
@@ -301,6 +302,7 @@ void VulkanRHI::CreateLogicalDevice()
     Features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     Features12.shaderInt8 = VK_TRUE;
     Features12.storageBuffer8BitAccess = VK_TRUE;
+    Features12.descriptorIndexing = VK_TRUE;
     MeshShaderFeatureEnable.pNext = &Features12;
     
     VkResult CreateResult = vkCreateDevice(VulkanContext->PhysicalDevice, &DeviceInfo, nullptr, &VulkanContext->Device);
@@ -432,16 +434,22 @@ void VulkanRHI::CreateDefaultAttachments()
     DefaultAttachments.resize(VulkanContext->SwapchainImages.size(), nullptr);
     for(size_t i=0; i<VulkanContext->SwapchainImages.size(); ++i)
     {
-        DefaultAttachments[i] = new VulkanRHIRenderImageAttachment{};
-        DefaultAttachments[i]->AttachmentType = RenderImageAttachmentType_SwapChain;
-        DefaultAttachments[i]->AttachmentImage = new VulkanRHITexImage
-        {
-            {VulkanContext->Extend.width, VulkanContext->Extend.height, 1, 1},
+        DefaultAttachments[i] = new VulkanRHITexture{
+            {
+                {
+                    VulkanContext->Extend.width,
+                    VulkanContext->Extend.height,
+                    GetSwapchainTextureFormat(),
+                    TextureType_2D,
+                    TextureUsageBit_ColorAttachment,
+                    1,
+                    1
+                }},
             VulkanContext->SwapchainImages[i], nullptr
         };
-        DefaultAttachments[i]->DefaultView = new VulkanRHITexImageView
+        DefaultAttachments[i]->DefaultTextureView = new VulkanRHITextureView
         {
-            {DefaultAttachments[i]->AttachmentImage},
+            {DefaultAttachments[i], GetSwapchainTextureFormat()},
             VulkanContext->ImageViews[i]
         };
     }
@@ -573,6 +581,10 @@ void VulkanRHI::CreateDescriptorPool()
     PoolSize[3].descriptorCount = 4096; 
     PoolSize[4].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
     PoolSize[4].descriptorCount = 32;
+    PoolSize[5].type            = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    PoolSize[5].descriptorCount = 1024;
+    PoolSize[6].type            = VK_DESCRIPTOR_TYPE_SAMPLER;
+    PoolSize[6].descriptorCount = 1024;
 
     VkDescriptorPoolCreateInfo PoolInfo {};
     PoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -607,8 +619,7 @@ void VulkanRHI::DestroySwapchainObjects()
 {
     for(auto Attachment : DefaultAttachments)
     {
-        delete Attachment->DefaultView;
-        delete Attachment->AttachmentImage;
+        delete Attachment->DefaultTextureView;
         delete Attachment;
     }
 

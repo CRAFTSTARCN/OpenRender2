@@ -8,28 +8,28 @@
 #include "stb_image.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
 
-TexturePixelFormat TextureImporter::AnalysisFormat(Json AssetJson)
+RHIFormat TextureImporter::AnalysisFormat(Json AssetJson)
 {
 	Json Format = AssetJson["Format"];
 	const std::string& Str = Format.string_value();
 
 	if(Str == std::string("SRGB"))
 	{
-		return TexturePixelFormat_RGBA8_SRGB;
+		return RHIFormat_RGBA8_SRGB;
 	}
 	else if(Str == std::string("HDR"))
 	{
-		return TexturePixelFormat_RGBA32_FLOAT;
+		return RHIFormat_RGBA32_FLOAT;
 	}
 	else if(Str == std::string("Linear"))
 	{
-		return TexturePixelFormat_RGBA8;
+		return RHIFormat_RGBA8;
 	}
 	else
 	{
 		LOG_WARN_FUNCTION("No format info in asset resource, default rgba will used");
 	}
-	return TexturePixelFormat_RGBA8;
+	return RHIFormat_RGBA8;
 	
 }
 
@@ -149,7 +149,7 @@ Texture2DImporter::~Texture2DImporter()
 
 size_t Texture2DImporter::LoadAsset(Json AssetJson, const std::string& RelPath)
 {
-	TexturePixelFormat Format = AnalysisFormat(AssetJson);
+	RHIFormat Format = AnalysisFormat(AssetJson);
 	const auto& Data = AssetJson["Data"].array_items();
 	if(Data.empty())
 	{
@@ -173,7 +173,7 @@ size_t Texture2DImporter::LoadAsset(Json AssetJson, const std::string& RelPath)
 		std::string FullPath = (std::filesystem::path(ConfigPtr->BasePath) / AddressStr).generic_string();
 		void* TexPtr = nullptr;
 		int Width, Height, Channel;
-		if(Format == TexturePixelFormat_RGBA32_FLOAT)
+		if(Format == RHIFormat_RGBA32_FLOAT)
 		{
 			TexPtr = stbi_loadf(FullPath.c_str(), &Width, &Height, &Channel, STBI_rgb_alpha);
 		}
@@ -214,7 +214,7 @@ size_t Texture2DImporter::LoadAsset(Json AssetJson, const std::string& RelPath)
 
 	ParamUsage Usage = AssetImporter::AnaParamUsage(AssetJson["UsageTime"].array_items());
 
-	size_t TexId = RenderResource::TextureRegistry.GetNewId();
+	size_t TexId = RenderTexture::Registry.GetNewId();
 	Texture2DAsset* NewAsset = new Texture2DAsset(TexId);
 	size_t AssetId = RegistryPtr->RegisterNew(NewAsset, RelPath);
 
@@ -257,7 +257,7 @@ size_t TextureCubeImporter::LoadAsset(Json AssetJson, const std::string& RelPath
 {
 	static const char* FaceArr[6] = {"X+", "X-", "Y+", "Y-", "Z+", "Z-"};
 	
-	TexturePixelFormat Format = AnalysisFormat(AssetJson);
+	RHIFormat Format = AnalysisFormat(AssetJson);
 	const auto& Data = AssetJson["Data"].array_items();
 	if(Data.empty())
 	{
@@ -288,7 +288,7 @@ size_t TextureCubeImporter::LoadAsset(Json AssetJson, const std::string& RelPath
 
 			int Width, Height, Channel;
 			void* TexPtr = nullptr;
-			if(Format == TexturePixelFormat_RGBA32_FLOAT)
+			if(Format == RHIFormat_RGBA32_FLOAT)
 			{
 				TexPtr = stbi_loadf(FullFacePath.c_str(), &Width, &Height, &Channel, STBI_rgb_alpha);
 			}
@@ -356,7 +356,7 @@ size_t TextureCubeImporter::LoadAsset(Json AssetJson, const std::string& RelPath
 	}
 
 	ParamUsage Usage = AssetImporter::AnaParamUsage(AssetJson["UsageTime"].array_items());
-	size_t TexId = RenderResource::TextureRegistry.GetNewId();
+	size_t TexId = RenderTexture::Registry.GetNewId();
 	TextureCubeAsset* NewAsset = new TextureCubeAsset(TexId);
 	size_t AssetId = RegistryPtr->RegisterNew(NewAsset, RelPath);
 

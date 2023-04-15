@@ -2,7 +2,7 @@
 
 #include "OpenRenderRuntime/Core/RHI/RHIEnums.h"
 
-class RHIRenderingPhase
+class RHICommandList
 {
     
 public:

@@ -1,20 +1,21 @@
 ﻿#pragma once
 #include <unordered_map>
 
+#include "RenderTexture.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderMesh.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialInstance.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialBase.h"
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
-#include "OpenRenderRuntime/Core/RHI/RHIRenderImageAttachment.h"
+#include "OpenRenderRuntime/Core/RHI/RHIRenderTarget.h"
 #include "OpenRenderRuntime/Core/RHI/RHITexture.h"
 
 struct GBuffer
 {
-	RHIRenderImageAttachment* GBufferA = nullptr; //RGB: base color, A: baked ambient occlusion
-	RHIRenderImageAttachment* GBufferB = nullptr; //RGB: Normal, A: subsurface
-	RHIRenderImageAttachment* GBufferC = nullptr; //RGB: metallic, specular, roughness, A: shader model id
-	RHIRenderImageAttachment* GBufferD = nullptr; //RGB: emissive
-	RHIRenderImageAttachment* GBufferE = nullptr; //RGB: Tangent A: Anisotropy
+	RHITexture* GBufferA = nullptr; //RGB: base color, A: baked ambient occlusion
+	RHITexture* GBufferB = nullptr; //RGB: Normal, A: subsurface
+	RHITexture* GBufferC = nullptr; //RGB: metallic, specular, roughness, A: shader model id
+	RHITexture* GBufferD = nullptr; //RGB: emissive
+	RHITexture* GBufferE = nullptr; //RGB: Tangent A: Anisotropy
 };
 
 //Gpu data proxy
@@ -41,15 +42,15 @@ struct GlobalRenderDataProxy
 
 struct IBLResource
 {
-	RHITexture* SkyBox = nullptr;
-	RHITexture* RadianceMap = nullptr;
-	RHITexture* IrradianceMap = nullptr;
-	RHITexture* BRDFLUT = nullptr;
+	RenderTexture* SkyBox = nullptr;
+	RenderTexture* RadianceMap = nullptr;
+	RenderTexture* IrradianceMap = nullptr;
+	RenderTexture* BRDFLUT = nullptr;
 };
 
 struct DefaultErrorResource
 {
-	RHITexture* DefaultTexture = nullptr;
+	RenderTexture* DefaultTexture = nullptr;
 	RenderMaterialInstance* DefaultMaterialInstance = nullptr;
 };
 
@@ -61,14 +62,11 @@ class RenderResource
 	size_t CurrentOffset = 0;
 	
 public:
-
-	inline static AutoIncreaseIdAllocator TextureRegistry {0};
-	constexpr static size_t BAD_TEXTURE_ID = SIZE_MAX;
 	
 
 	virtual ~RenderResource() {}
 	
-	std::unordered_map<size_t, RHITexture*> Textures {};
+	std::unordered_map<size_t, RenderTexture*> Textures {};
 	std::unordered_map<size_t, RenderMaterialBase*> MaterialBases {};
 	std::unordered_map<size_t, RenderMaterialInstance*> Materials {};
 	std::unordered_map<size_t, RenderMesh*> Meshes;
@@ -77,12 +75,13 @@ public:
 	 * Resources registered by render passes that may used by other passes
 	 * The resource should destroyed by the pass that created it
 	 */
-	std::unordered_map<std::string, RHIRenderImageAttachment*> RegisteredAttachments;
+	std::unordered_map<std::string, RHITexture*> RegisteredTextures;
 	std::unordered_map<std::string, RHIDescriptorLayout*> RegisteredLayout;
 	std::unordered_map<std::string, RHIDescriptorSet*> RegisteredSet;
+	std::unordered_map<std::string, RHISampler*> RegisteredSampler;
 	
 	GBuffer GlobalGBuffer {};
-	RHIRenderImageAttachment* DepthStencilAttachment = nullptr;
+	RHITexture* DepthStencilAttachment = nullptr;
 
 	RHIBuffer* GlobalBuffer = nullptr;
 	size_t GlobalBufferSize = 0;

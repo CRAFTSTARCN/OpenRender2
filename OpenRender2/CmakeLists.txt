@@ -8,7 +8,7 @@ add_executable(${TARGET_NAME} ${HEADER_FILE_APP} ${HEADER_PLUS_FILE_APP} ${SOURC
 
 target_link_libraries(${TARGET_NAME} OpenRenderRuntime)
 
-set_target_properties(OpenRender2 PROPERTIES FOLDER ${RENDER_FOLDER_NAME})
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER ${RENDER_FOLDER_NAME})
 
 set(CONTENT_DIR_NAME "Content/")
 set(PASS_SHADER_DIR_NAME "PassShader/")

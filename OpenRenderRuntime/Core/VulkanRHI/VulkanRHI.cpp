@@ -5,15 +5,16 @@
 
 #include <cassert>
 
-#include "VulkanRHIFrameBuffer.h"
-#include "VulkanRHISemaphoreView.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIFrameBuffer.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHISampler.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHISemaphoreView.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIDescriptor.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIPipeline.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderImageAttachment.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderTarget.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderPass.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderSubpass.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImage.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImageView.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITextureView.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHISemaphore.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexture.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIBuffer.h"
@@ -131,7 +132,7 @@ RHIShaderModule* VulkanRHI::CreateComputeShader(const void* ShaderSource, size_t
     return new VulkanRHIShaderModule{{ShaderStageTypeBit_Compute}, SM};
 }
 
-RHIBuffer* VulkanRHI::CreateStorageBuffer(size_t Size, BufferMemoryUsage Usage, bool Share)
+RHIBuffer* VulkanRHI::CreateStorageBuffer(size_t Size, BufferMemoryUsage Usage)
 {
     VmaMemoryUsage InternalUsage = BufferMemoryUsageTransfer[Usage];
     VkBufferUsageFlags InternalBufferUsage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -149,8 +150,7 @@ RHIBuffer* VulkanRHI::CreateStorageBuffer(size_t Size, BufferMemoryUsage Usage, 
         InternalBufferUsage,
         InternalUsage,
         Buffer,
-        BufferAllocation,
-        Share);
+        BufferAllocation);
 
     if(!Result)
     {
@@ -229,17 +229,10 @@ RHIBuffer* VulkanRHI::CreateIndexBuffer(size_t Size)
     return BufferPtr;
 }
 
-RHIBuffer* VulkanRHI::CreateAnyBuffer(size_t Size, BufferTypeFlag BufferType, BufferMemoryUsage Usage, bool Share)
+RHIBuffer* VulkanRHI::CreateAnyBuffer(size_t Size, BufferUsage BufferUsage, BufferMemoryUsage Usage, bool Share)
 {
     VmaMemoryUsage InternalUsage = BufferMemoryUsageTransfer[Usage];
-    VkBufferUsageFlags InternalBufferUsage = 0;
-    for(int i=0; i<3; ++i)
-    {
-        if(BufferType & (1 << i))
-        {
-            InternalBufferUsage |= BufferUsageTransfer[i];
-        }
-    }
+    VkBufferUsageFlags InternalBufferUsage = TransferBufferUsage(BufferUsage);
 
     VkBuffer Buffer = VK_NULL_HANDLE;
     VmaAllocation BufferAllocation = VK_NULL_HANDLE;
@@ -249,8 +242,7 @@ RHIBuffer* VulkanRHI::CreateAnyBuffer(size_t Size, BufferTypeFlag BufferType, Bu
         InternalBufferUsage,
         InternalUsage,
         Buffer,
-        BufferAllocation,
-        Share);
+        BufferAllocation);
 
     if(!Result)
     {
@@ -280,116 +272,19 @@ void VulkanRHI::SetBufferData(RHIBuffer* Buffer, const void* Data, size_t Size, 
     }
 }
 
-RHIRenderImageAttachment* VulkanRHI::CreateRenderAttachment(uint32_t Width, uint32_t Height, TexturePixelFormat Format,
-                                                       RenderImageAttachmentType AttachmentType, ImageExtraUsage ExtraUsage, uint32_t LayerCount, uint32_t MipmapCount, bool Share)
-{
-    VkImage Image = VK_NULL_HANDLE;
-    VmaAllocation Allocation = VK_NULL_HANDLE;
-
-    VkImageUsageFlags Usage = AttachmentUsageTransfer[AttachmentType];
-    for(int i = 0; i<=4; ++i)
-    {
-        if(ExtraUsage & 1 << i)
-        {
-            ExtraUsage |= AttachmentUsageTransfer[i];
-        }
-    }
-
-    VkImageCreateFlags CreateFlag = 0;
-    VkImageViewType CreateType = VK_IMAGE_VIEW_TYPE_2D;
-    if(LayerCount > 1)
-    {
-        CreateFlag = VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
-        CreateType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-    }
-
-    bool Result = VKTool::CreateImage2D(
-        VulkanContext,
-        Width,
-        Height,
-        FormatTransfer[Format],
-        VK_IMAGE_TILING_OPTIMAL,
-        Usage,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        Image,
-        Allocation,
-        CreateFlag,
-        LayerCount,
-        MipmapCount,
-        Share);
-    
-
-    if(!Result)
-    {
-        LOG_ERROR("Fail to create attachment image");
-        return nullptr;
-    }
-
-    
-    VkImageView ImageView = VKTool::CreateImageView(
-        VulkanContext,
-        Image,
-        FormatTransfer[Format],
-        AttachmentAspectTransfer[AttachmentType],
-        CreateType,
-        LayerCount,
-        1);
-
-    VulkanRHITexImage* VKTexImage = new VulkanRHITexImage{{Width, Height, LayerCount, MipmapCount, Format}, Image, Allocation};
-    VulkanRHITexImageView* VKTexImageView = new VulkanRHITexImageView{{VKTexImage}, ImageView};
-
-    return new VulkanRHIRenderImageAttachment{{VKTexImage, VKTexImageView, AttachmentType}};
-}
-
-RHITexImageView* VulkanRHI::CreateImageViewFromImageAttachment(RHIRenderImageAttachment* ImageAttachment,
-    uint32_t LayerCount, uint32_t MipmapCount, uint32_t Layer, uint32_t MipmapLevel, TextureType ImageViewType)
-{
-    RHI_2_VK_CHECKED_NULL(VulkanRHITexImage, ImageAttachment->AttachmentImage, VKTexImage)
-
-    VkImageViewType VKImageViewType = VK_IMAGE_VIEW_TYPE_2D;
-    if(ImageViewType == TextureType_Array)
-    {
-        VKImageViewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-    }
-    else if(ImageViewType == TextureType_Cube)
-    {
-        LOG_ERROR_FUNCTION("Currently not support input attachment 2 cube map");
-        return nullptr;
-    }
-    
-    
-    VkImageView View = VKTool::CreateImageView(
-        VulkanContext,
-        VKTexImage->Image,
-        FormatTransfer[VKTexImage->Format],
-        AttachmentAspectTransfer[ImageAttachment->AttachmentType],
-        VKImageViewType,
-        LayerCount,
-        MipmapCount,
-        Layer,
-        MipmapLevel);
-
-    if(View == VK_NULL_HANDLE)
-    {
-        return nullptr;
-    }
-
-    return new VulkanRHITexImageView{{VKTexImage}, View};
-}
-
 uint32_t VulkanRHI::GetSwapchainImageCount() const
 {
     return (uint32_t)VulkanContext->SwapchainImages.size();
 }
 
-TexturePixelFormat VulkanRHI::GetSwapchainImageFormat() const
+RHIFormat VulkanRHI::GetSwapchainTextureFormat() const
 {
-    static std::unordered_map<VkFormat, TexturePixelFormat> FormatInternalTransfer = {
-        {VK_FORMAT_R8G8B8_UNORM, TexturePixelFormat_RGB8},
-        {VK_FORMAT_B8G8R8A8_UNORM,TexturePixelFormat_BGRA8},
-        {VK_FORMAT_B8G8R8A8_SRGB, TexturePixelFormat_BGRA8_SRGB},
-        {VK_FORMAT_R16G16B16_SFLOAT, TexturePixelFormat_RGBA16_FLOAT},
-        {VK_FORMAT_A2B10G10R10_UNORM_PACK32, TexturePixelFormat_A2_BGR10_HDR}
+    static std::unordered_map<VkFormat, RHIFormat> FormatInternalTransfer = {
+        {VK_FORMAT_R8G8B8_UNORM, RHIFormat_RGB8},
+        {VK_FORMAT_B8G8R8A8_UNORM,RHIFormat_BGRA8},
+        {VK_FORMAT_B8G8R8A8_SRGB, RHIFormat_BGRA8_SRGB},
+        {VK_FORMAT_R16G16B16_SFLOAT, RHIFormat_RGBA16_FLOAT},
+        {VK_FORMAT_A2B10G10R10_UNORM_PACK32, RHIFormat_A2_BGR10_HDR}
     };
     auto Iter = FormatInternalTransfer.find(VulkanContext->Format);
     if(Iter == FormatInternalTransfer.end())
@@ -411,7 +306,7 @@ uint32_t VulkanRHI::GetSwapchainExtendHeight()
     return VulkanContext->Extend.height;
 }
 
-RHIRenderImageAttachment& VulkanRHI::GetSwapchainRenderAttachment(uint32_t Index)
+RHITexture& VulkanRHI::GetSwapchainTexture(uint32_t Index)
 {
     if(Index >= DefaultAttachments.size())
     {
@@ -427,9 +322,9 @@ uint32_t VulkanRHI::GetCurrentSwapchainImageIndex()
     return VulkanContext->CurrentFrameIndex;
 }
 
-RHIRenderingPhase* VulkanRHI::GetRenderPhase(RenderingTaskQueue PhaseQueue)
+RHICommandList* VulkanRHI::GetCommandList(RenderingTaskQueue PhaseQueue)
 {
-    VulkanRHIRenderingPhase *Result = new VulkanRHIRenderingPhase{{PhaseQueue}, -1};
+    VulkanRHICommandList *Result = new VulkanRHICommandList{{PhaseQueue}, -1};
     VkResult Reset = VK_SUCCESS; 
     if(PhaseQueue == RenderingTaskQueue_Graphics)
     {
@@ -468,10 +363,10 @@ RHIRenderingPhase* VulkanRHI::GetRenderPhase(RenderingTaskQueue PhaseQueue)
     return Result;
 }
 
-void VulkanRHI::SubmitRenderingPhase(RHIRenderingPhase*& SubmittedPhase, const std::vector<RHISemaphoreView*>& WaitSemaphore,
+void VulkanRHI::SubmitCommandList(RHICommandList*& SubmittedPhase, const std::vector<RHISemaphoreView*>& WaitSemaphore,
                                      const std::vector<RHISemaphore*>& SignalSemaphore)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, SubmittedPhase, VulkanSubmittedPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, SubmittedPhase, VulkanSubmittedPhase)
     VkQueue SubmitTo = VulkanContext->GraphicsQueue;
     VkCommandBuffer Buffer = VK_NULL_HANDLE;
     VulkanCmdBufferStatusStruct* Status = &DrawCommandsStatus;
@@ -735,7 +630,7 @@ RHIDescriptorSet* VulkanRHI::CreateDescriptorSet(RHIDescriptorLayout* RHILayout)
     return new VulkanRHIDescriptorSet{{}, Set};
 }
 
-void VulkanRHI::WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::vector<TextureWriteInfo>& Textures,
+void VulkanRHI::WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::vector<TextureWithSamplerWriteInfo>& Textures,
     const std::vector<ImageWriteInfo>& Images, const std::vector<BufferWriteInfo>& Buffers)
 {
     RHI_2_VK_CHECKED(VulkanRHIDescriptorSet, WriteSet, VKSet)
@@ -749,10 +644,10 @@ void VulkanRHI::WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::v
     for(size_t i=0; i<Textures.size(); ++i)
     {
         VkDescriptorImageInfo& TextureImageInfo = TextureImageInfos[i];
-        RHI_2_VK_CHECKED(VulkanRHITexture,Textures[i].Texture, VKTexImage)
-        RHI_2_VK_CHECKED(VulkanRHITexImageView,VKTexImage->TextureImageView, VKTexImageView)
+        RHI_2_VK_CHECKED(VulkanRHITextureView,Textures[i].Texture, VKTexImageView)
+        RHI_2_VK_CHECKED(VulkanRHISampler, Textures[i].Sampler, VKSampler)
         TextureImageInfo.imageView = VKTexImageView->ImageView;
-        TextureImageInfo.sampler = VKTexImage->TextureSampler;
+        TextureImageInfo.sampler = VKSampler->Sampler;
         TextureImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
         VkWriteDescriptorSet& TexWrite = WriteInfo[WriteIndex];
@@ -764,7 +659,7 @@ void VulkanRHI::WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::v
     for(size_t i=0; i<Images.size(); ++i)
     {
         VkDescriptorImageInfo& ImageInfo = ImageInfos[i];
-        RHI_2_VK_CHECKED(VulkanRHITexImageView,Images[i].ImageView, VKTexImageView)
+        RHI_2_VK_CHECKED(VulkanRHITextureView,Images[i].ImageView, VKTexImageView)
         ImageInfo.imageView = VKTexImageView->ImageView;
         ImageInfo.sampler = VK_NULL_HANDLE;
         ImageInfo.imageLayout = (VkImageLayout)Images[i].ImageLayout;
@@ -998,7 +893,7 @@ RHIPipeline* VulkanRHI::CreateComputePipeline(const std::vector<RHIDescriptorLay
     return new VulkanRHIPipeline{{}, ComputePipeline};
 }
 
-RHIFrameBuffer* VulkanRHI::CreateFrameBuffer(RHIRenderPass* ToPass, const std::vector<RHITexImageView*>& ImageViews,
+RHIFrameBuffer* VulkanRHI::CreateFrameBuffer(RHIRenderPass* ToPass, const std::vector<RHITextureView*>& ImageViews,
                                              uint32_t Width, uint32_t Height, uint32_t LayerCount)
 {
     RHI_2_VK_CHECKED_NULL(VulkanRHIRenderPass, ToPass, ToVKPass)
@@ -1007,7 +902,7 @@ RHIFrameBuffer* VulkanRHI::CreateFrameBuffer(RHIRenderPass* ToPass, const std::v
 
     for(size_t i=0; i<ImageViews.size(); ++i)
     {
-        RHI_2_VK_CHECKED_NULL(VulkanRHITexImageView, ImageViews[i], VKTexImageView)
+        RHI_2_VK_CHECKED_NULL(VulkanRHITextureView, ImageViews[i], VKTexImageView)
         VKImageViews[i] = VKTexImageView->ImageView;
     }
     
@@ -1032,11 +927,11 @@ RHIFrameBuffer* VulkanRHI::CreateFrameBuffer(RHIRenderPass* ToPass, const std::v
     return new VulkanRHIFrameBuffer{{}, FrameBuffer};
 }
 
-void VulkanRHI::StartRenderPass(RHIRenderingPhase* Phase, RHIRenderPass* Pass, RHIFrameBuffer* FrameBuffer,
+void VulkanRHI::StartRenderPass(RHICommandList* Phase, RHIRenderPass* Pass, RHIFrameBuffer* FrameBuffer,
     const std::vector<ClearColorInfo>& ColorClearInfos, RHIRect2D RenderArea)
 {
 
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     RHI_2_VK_CHECKED(VulkanRHIRenderPass, Pass, VKPass)
     RHI_2_VK_CHECKED(VulkanRHIFrameBuffer, FrameBuffer, VKFrameBuffer)
     
@@ -1069,23 +964,23 @@ void VulkanRHI::StartRenderPass(RHIRenderingPhase* Phase, RHIRenderPass* Pass, R
     vkCmdBeginRenderPass(StartRenderBuffer, &RenderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void VulkanRHI::SetRenderViewport(RHIRenderingPhase* Phase, const RHIViewport& Viewport, uint32_t Index)
+void VulkanRHI::SetRenderViewport(RHICommandList* Phase, const RHIViewport& Viewport, uint32_t Index)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     VkViewport VKViewport {Viewport.XPos, Viewport.Height-Viewport.YPos, Viewport.Width, -Viewport.Height, 0.0, 1.0};
     vkCmdSetViewport(VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex], Index, 1, &VKViewport);
 }
 
-void VulkanRHI::SetRenderScissor(RHIRenderingPhase* Phase, const RHIRect2D& Scissor, uint32_t Index)
+void VulkanRHI::SetRenderScissor(RHICommandList* Phase, const RHIRect2D& Scissor, uint32_t Index)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     VkRect2D VKScissor = {{Scissor.OffsetX, Scissor.OffsetY}, {Scissor.Width, Scissor.Height}};
     vkCmdSetScissor(VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex], Index, 1, &VKScissor);
 }
 
-void VulkanRHI::UseGraphicsPipeline(RHIRenderingPhase* Phase, RHIPipeline* GraphicsPipeline)
+void VulkanRHI::UseGraphicsPipeline(RHICommandList* Phase, RHIPipeline* GraphicsPipeline)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     RHI_2_VK_CHECKED(VulkanRHIPipeline, GraphicsPipeline, VKGraphicsPipeline)
     vkCmdBindPipeline(
         VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex],
@@ -1093,9 +988,9 @@ void VulkanRHI::UseGraphicsPipeline(RHIRenderingPhase* Phase, RHIPipeline* Graph
         VKGraphicsPipeline->Pipeline);
 }
 
-void VulkanRHI::UseComputePipeline(RHIRenderingPhase* Phase, RHIPipeline* ComputePipeline)
+void VulkanRHI::UseComputePipeline(RHICommandList* Phase, RHIPipeline* ComputePipeline)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     RHI_2_VK_CHECKED(VulkanRHIPipeline, ComputePipeline, VKComputePipeline)
     vkCmdBindPipeline(
         VulkanContext->ComputeCommandBuffers[VKPhase->BufferIndex],
@@ -1103,10 +998,10 @@ void VulkanRHI::UseComputePipeline(RHIRenderingPhase* Phase, RHIPipeline* Comput
         VKComputePipeline->Pipeline);
 }
 
-void VulkanRHI::SetDescriptorSet(RHIRenderingPhase* RenderingPhase, RHIPipeline* Pipeline, RHIDescriptorSet* Set,
+void VulkanRHI::SetDescriptorSet(RHICommandList* RenderingPhase, RHIPipeline* Pipeline, RHIDescriptorSet* Set,
     uint32_t BindIndex, const std::vector<uint32_t>& DynamicOffsets)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, RenderingPhase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, RenderingPhase, VKPhase)
     RHI_2_VK_CHECKED(VulkanRHIPipeline, Pipeline, VKPipeline)
     RHI_2_VK_CHECKED(VulkanRHIDescriptorSet, Set, VKSet)
     VkCommandBuffer Buffer = VK_NULL_HANDLE;
@@ -1128,101 +1023,31 @@ void VulkanRHI::SetDescriptorSet(RHIRenderingPhase* RenderingPhase, RHIPipeline*
     vkCmdBindDescriptorSets(Buffer, Point, VKPipeline->Layout, BindIndex, 1, &VKSet->Set, DynamicOffsets.size(), OffsetPtr);
 }
 
-void VulkanRHI::DrawMeshTask(RHIRenderingPhase* Phase, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ)
+void VulkanRHI::DrawMeshTask(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     VulkanEXT.VKCmdDrawMeshTaskEXT(VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex], WorkGroupX, WorkGroupY, WorkGroupZ);
+    
 }
 
-void VulkanRHI::StartNextSubpass(RHIRenderingPhase* Phase)
+void VulkanRHI::Dispatch(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGropY, uint32_t WorkGroupZ)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
+    vkCmdDispatch(VulkanContext->ComputeCommandBuffers[VKPhase->BufferIndex], WorkGroupX, WorkGropY, WorkGroupZ);
+}
+
+void VulkanRHI::StartNextSubpass(RHICommandList* Phase)
+{
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     vkCmdNextSubpass(VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex], VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void VulkanRHI::EndRenderPass(RHIRenderingPhase* Phase)
+void VulkanRHI::EndRenderPass(RHICommandList* Phase)
 {
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, Phase, VKPhase)
+    RHI_2_VK_CHECKED(VulkanRHICommandList, Phase, VKPhase)
     VkCommandBuffer EndBuffer = VulkanContext->DrawCommandBuffers[VKPhase->BufferIndex];
     vkCmdEndRenderPass(EndBuffer);
 }
-
-void VulkanRHI::TranslateImageLayout(RHIRenderingPhase* RenderPhase, RHIRenderImageAttachment* ToAttachment,
-    TexImageLayout Src, TexImageLayout Dst, PipelineStage WaitSrcStage, PipelineStage DstStageWait, uint32_t LayerCount,
-    uint32_t MipmapCount, uint32_t LayerBias, uint32_t MipmapBias)
-{
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, RenderPhase, VKRenderPhase)
-    RHI_2_VK_CHECKED(VulkanRHITexImage, ToAttachment->AttachmentImage, VKTexImage)
-    VkCommandBuffer Buffer = VK_NULL_HANDLE;
-    if(VKRenderPhase->PhaseQueue == RenderingTaskQueue_Graphics)
-    {
-        Buffer = VulkanContext->DrawCommandBuffers[VKRenderPhase->BufferIndex];
-    }
-    else
-    {
-        Buffer = VulkanContext->ComputeCommandBuffers[VKRenderPhase->BufferIndex];    
-    }
-
-    VKTool::SetImageLayout(
-        Buffer,
-        VKTexImage->Image,
-        (VkImageLayout)Src,
-        (VkImageLayout)Dst,
-        AttachmentAspectTransfer[ToAttachment->AttachmentType],
-        TransferPipelineStage(WaitSrcStage),
-        TransferPipelineStage(DstStageWait),
-        LayerCount,
-        MipmapCount,
-        LayerBias,
-        MipmapBias);
-}
-
-void VulkanRHI::TranslateImageLayoutAccess(RHIRenderingPhase* RenderPhase, RHIRenderImageAttachment* ToAttachment,
-    TexImageLayout Src, TexImageLayout Dst, PipelineStage WaitSrcStage, PipelineStage DstStageWait,
-    AccessMask SrcAccessMask, AccessMask DstAccessMask, uint32_t LayerCount, uint32_t MipmapCount, uint32_t LayerBias,
-    uint32_t MipmapBias)
-{
-    RHI_2_VK_CHECKED(VulkanRHIRenderingPhase, RenderPhase, VKRenderPhase)
-    RHI_2_VK_CHECKED(VulkanRHITexImage, ToAttachment->AttachmentImage, VKTexImage)
-    VkCommandBuffer Buffer = VK_NULL_HANDLE;
-    if(VKRenderPhase->PhaseQueue == RenderingTaskQueue_Graphics)
-    {
-        Buffer = VulkanContext->DrawCommandBuffers[VKRenderPhase->BufferIndex];
-    }
-    else
-    {
-        Buffer = VulkanContext->ComputeCommandBuffers[VKRenderPhase->BufferIndex];    
-    }
-
-    VkImageMemoryBarrier ImageMemoryBarrier {};
-    ImageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    ImageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    ImageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    ImageMemoryBarrier.oldLayout = (VkImageLayout)Src;
-    ImageMemoryBarrier.newLayout = (VkImageLayout)Dst;
-    ImageMemoryBarrier.image = VKTexImage->Image;
-    ImageMemoryBarrier.subresourceRange.aspectMask = AttachmentAspectTransfer[ToAttachment->AttachmentType];
-    ImageMemoryBarrier.subresourceRange.layerCount = LayerCount;
-    ImageMemoryBarrier.subresourceRange.baseArrayLayer = LayerBias;
-    ImageMemoryBarrier.subresourceRange.levelCount = MipmapCount;
-    ImageMemoryBarrier.subresourceRange.baseMipLevel = MipmapBias;
-
-    ImageMemoryBarrier.srcAccessMask = SrcAccessMask;
-    ImageMemoryBarrier.dstAccessMask = DstAccessMask;
-
-    vkCmdPipelineBarrier(
-        Buffer,
-        TransferPipelineStage(WaitSrcStage),
-        TransferPipelineStage(DstStageWait),
-        0,
-        0,
-        nullptr,
-        0,
-        nullptr,
-        1,
-        &ImageMemoryBarrier);
-}
-
 
 void VulkanRHI::BeginFrameRendering()
 {
@@ -1284,39 +1109,20 @@ void VulkanRHI::EndFrameRendering()
     
 }
 
-void VulkanRHI::DestroyTexImageView(RHITexImageView*& Destroyed)
+void VulkanRHI::DestroyTexImageView(RHITextureView*& Destroyed)
 {
-    RHI_2_VK_CHECKED(VulkanRHITexImageView, Destroyed, VKImageViewDestroyed)
+    RHI_2_VK_CHECKED(VulkanRHITextureView, Destroyed, VKImageViewDestroyed)
     vkDestroyImageView(VulkanContext->Device, VKImageViewDestroyed->ImageView, nullptr);
     delete VKImageViewDestroyed;
-}
-
-void VulkanRHI::DestroyRenderAttachment(RHIRenderImageAttachment*& Destroyed)
-{
-    DestroyTexImageView(Destroyed->DefaultView);
-    
-    RHI_2_VK_CHECKED(VulkanRHITexImage, Destroyed->AttachmentImage, VKImageDestroyed)
-    vkDestroyImage(VulkanContext->Device, VKImageDestroyed->Image, nullptr);
-    vmaFreeMemory(VulkanContext->Allocator, VKImageDestroyed->Allocation);
-    delete VKImageDestroyed;
-    
-    RHI_2_VK_CHECKED(RHIRenderImageAttachment, Destroyed, VKImageAttachmentDestroyed)
-    delete VKImageAttachmentDestroyed;
 }
 
 void VulkanRHI::DestroyTexture(RHITexture*& Destroyed)
 {
     RHI_2_VK_CHECKED(VulkanRHITexture, Destroyed, VKTextureDestroyed)
-    DestroyTexImageView(VKTextureDestroyed->TextureImageView);
-
-    if(Destroyed->TextureImage)
-    {
-        RHI_2_VK_CHECKED(VulkanRHITexImage, Destroyed->TextureImage, VKImageDestroyed)
-        vmaDestroyImage(VulkanContext->Allocator, VKImageDestroyed->Image, VKImageDestroyed->Allocation);
-        delete VKImageDestroyed;
-    }
+    DestroyTexImageView(VKTextureDestroyed->DefaultTextureView);
     
-    //Do not destroy sampler, destroy all sampler when rhi terminate
+    vmaDestroyImage(VulkanContext->Allocator, VKTextureDestroyed->Image, VKTextureDestroyed->Allocation);
+    
     delete VKTextureDestroyed;
 }
 
@@ -1353,29 +1159,35 @@ void VulkanRHI::DestroyRenderPass(RHIRenderPass*& Destroyed)
     delete VKPassDestroyed;
 }
 
-void VulkanRHI::DestroyDescriptorLayout(RHIDescriptorLayout* Destroyed)
+void VulkanRHI::DestroyDescriptorLayout(RHIDescriptorLayout*& Destroyed)
 {
     RHI_2_VK_CHECKED(VulkanRHIDescriptorLayout, Destroyed, VKLayoutDestroyed)
     vkDestroyDescriptorSetLayout(VulkanContext->Device, VKLayoutDestroyed->Layout, nullptr);
     delete VKLayoutDestroyed;
 }
 
-void VulkanRHI::DestroyDescriptorSet(RHIDescriptorSet* Destroyed)
+void VulkanRHI::DestroyDescriptorSet(RHIDescriptorSet*& Destroyed)
 {
     RHI_2_VK_CHECKED(VulkanRHIDescriptorSet, Destroyed, VKSetDestroyed)
     vkFreeDescriptorSets(VulkanContext->Device, VulkanContext->DescriptorPool, 1, &VKSetDestroyed->Set);
     delete VKSetDestroyed;
 }
 
-void VulkanRHI::DestroySemaphoreView(RHISemaphoreView* Destroyed)
+void VulkanRHI::DestroySemaphoreView(RHISemaphoreView*& Destroyed)
 {
     delete Destroyed;
 }
 
-void VulkanRHI::DestroySemaphore(RHISemaphore* Destroyed)
+void VulkanRHI::DestroySemaphore(RHISemaphore*& Destroyed)
 {
     RHI_2_VK_CHECKED(VulkanRHISemaphore, Destroyed, VKSemaphoreDestroyed)
     vkDestroySemaphore(VulkanContext->Device, VKSemaphoreDestroyed->VulkanSemaphore, nullptr);
+    delete Destroyed;
+}
+
+void VulkanRHI::DestroySampler(RHISampler*& Destroyed)
+{
+    RHI_2_VK_CHECKED(VulkanRHISampler, Destroyed, VKSamplerDestroyed)
     delete Destroyed;
 }
 

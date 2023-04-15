@@ -2,6 +2,7 @@
 
 #include <stb_image.h>
 
+#include "NeoRHI/RHI/RHIResource.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
 #include "OpenRenderRuntime/Modules/RenderData/TextureSwapData.h"
 #include "OpenRenderRuntime/Util/Logger.h"
@@ -78,39 +79,36 @@ void TextureCreateDataResolver::ResolveData(RenderSwapData* Data)
 	}
 
 	RHITexture* Texture = nullptr;
+
+	TextureInfo Textureinfo {
+		CreateData->Width,
+		CreateData->Height,
+		CreateData->Format,
+		CreateData->CreateDataType,
+		TextureUsageBit_Sample | TextureUsageBit_Transfer_Src | TextureUsageBit_Transfer_Dst,
+		CreateData->AutoMipmapLevelCount,
+		LayerCount
+	};
 	
 	if(CreateData->AutoMipmap)
 	{
+		
 		if(CreateData->TexData.size() != 1)
 		{
 			LOG_WARN_FUNCTION("Multi level of mipmaps provided for a auto mipmap texture");
 		}
-		Texture = RHIPtr->CreateTexture2DAutoMipmap(
-			CreateData->Width,
-			CreateData->Height,
-			CreateData->Format,
-			CreateData->TexData[0],
-			CreateData->CreateDataType,
-			CreateData->AllUsage,
-			CreateData->AutoMipmapLevelCount,
-			LayerCount,
-			CreateData->SampleAnisotropy,
-			CreateData->SampleInfo);
+		
+		Texture = RHIPtr->CreateTexture2DAutoMipmap(Textureinfo, CreateData->TexData[0]);
 	}
 	else
 	{
-		Texture = RHIPtr->CreateTexture2DManualMipmap(
-			CreateData->Width,
-			CreateData->Height,
-			CreateData->Format,
-			CreateData->TexData,
-			CreateData->CreateDataType,
-			CreateData->AllUsage,
-			(uint32_t)CreateData->TexData.size(),
-			CreateData->SampleAnisotropy,
-			LayerCount,
-			CreateData->SampleInfo);
+		Textureinfo.MipmapLevelCount = (uint32_t)CreateData->TexData.size();
+		Texture = RHIPtr->CreateTexture2DManualMipmap(Textureinfo,CreateData->TexData);
 	}
+
+	RenderTexture * ResourceTexture = new  RenderTexture;
+	ResourceTexture->InternalTexture = Texture;
+	ResourceTexture->Sampler = RHIPtr->CreateOrGetSampler(CreateData->SampleInfo);
 
 	if(!Texture)
 	{
@@ -118,7 +116,7 @@ void TextureCreateDataResolver::ResolveData(RenderSwapData* Data)
 	}
 	else
 	{
-		ResourcePtr->Textures.emplace(CreateData->TextureId, Texture);
+		ResourcePtr->Textures.emplace(CreateData->TextureId, ResourceTexture);
 	}
 	
 	FreeTextureCreationMemory();

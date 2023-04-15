@@ -7,21 +7,21 @@
 void PostCombinedPass::CreateRenderPass()
 {
 	AttachmentDescription ColorAttachment {};
-	ColorAttachment.Format = TexturePixelFormat_RGBA8;
+	ColorAttachment.Format = RHIFormat_RGBA8;
 	ColorAttachment.Onload = AttachmentLoadOperation_Load;
 	ColorAttachment.OnStore = AttachmentStoreOperation_Nothing;
 	ColorAttachment.InitialLayout = TexImageLayout_Color_Attachment;
 	ColorAttachment.FinalLayout = TexImageLayout_Shader_TexImage;
 
 	AttachmentDescription DepthStencilAttachment {};
-	DepthStencilAttachment.Format = TexturePixelFormat_D32_FLOAT;
+	DepthStencilAttachment.Format = RHIFormat_D32_FLOAT;
 	DepthStencilAttachment.Onload = AttachmentLoadOperation_Load;
 	DepthStencilAttachment.OnStore = AttachmentStoreOperation_Nothing;
 	DepthStencilAttachment.InitialLayout = TexImageLayout_Depth_Stencil_Attachment;
 	DepthStencilAttachment.FinalLayout = TexImageLayout_Shader_TexImage;
 
 	AttachmentDescription SwapChainImage {};
-	SwapChainImage.Format = RHIPtr->GetSwapchainImageFormat();
+	SwapChainImage.Format = RHIPtr->GetSwapchainTextureFormat();
 	SwapChainImage.Onload = AttachmentLoadOperation_Clear;
 	SwapChainImage.OnStore = AttachmentStoreOperation_Store;
 	SwapChainImage.InitialLayout = TexImageLayout_Undefined;
@@ -90,10 +90,10 @@ void PostCombinedPass::CreateDeferredShadingDescriptors()
 {
 	DeferredShadingGlobalLayout = RHIPtr->CreateDescriptorLayout({
 		{DescriptorType_Uniform_Buffer, ShaderStageTypeBit_Fragment},
-		{DescriptorType_Texture, ShaderStageTypeBit_Fragment},
-		{DescriptorType_Texture, ShaderStageTypeBit_Fragment},
-		{DescriptorType_Texture, ShaderStageTypeBit_Fragment},
-		{DescriptorType_Texture, ShaderStageTypeBit_Fragment}
+		{DescriptorType_Texture_With_Sampler, ShaderStageTypeBit_Fragment},
+		{DescriptorType_Texture_With_Sampler, ShaderStageTypeBit_Fragment},
+		{DescriptorType_Texture_With_Sampler, ShaderStageTypeBit_Fragment},
+		{DescriptorType_Texture_With_Sampler, ShaderStageTypeBit_Fragment}
 		/*{DescriptorType_Texture, ShaderStageTypeBit_Fragment}*/}); //no shadow currently
 	if(!DeferredShadingGlobalLayout)
 	{
@@ -141,7 +141,7 @@ void PostCombinedPass::CreateDeferredShadingDescriptors()
 void PostCombinedPass::UpdateGBufferAndDepth()
 {
 	GBuffer& GBufferRef = ResourcePtr->GlobalGBuffer;
-	std::vector<RHIRenderImageAttachment*> Inputs = {
+	std::vector<RHITexture*> Inputs = {
 		GBufferRef.GBufferA,
 		GBufferRef.GBufferB,
 		GBufferRef.GBufferC,
@@ -152,10 +152,11 @@ void PostCombinedPass::UpdateGBufferAndDepth()
 	std::vector<ImageWriteInfo> ImageWrites(6);
 	for(uint32_t i=0; i<6; ++i)
 	{
-		ImageWrites[i].ImageView = Inputs[i]->DefaultView;
+		ImageWrites[i].ImageView = Inputs[i]->DefaultTextureView;
 		ImageWrites[i].ImageLayout = TexImageLayout_Shader_TexImage;
 		ImageWrites[i].ImageType = DescriptorType_Input_Attachment;
 		ImageWrites[i].Binding = i;
+		ImageWrites[i].Index = 0;
 	}
 
 	RHIPtr->WriteDescriptorSetMulti(DeferredShadingGBuffer, {}, ImageWrites, {});
@@ -163,18 +164,22 @@ void PostCombinedPass::UpdateGBufferAndDepth()
 
 void PostCombinedPass::UpdateGlobalTexture(const IBLResource& IBL)
 {
-	RHITexture* SkyBox = IBL.SkyBox;
-	RHITexture* Radiance = IBL.RadianceMap;
-	RHITexture* Irradiance = IBL.IrradianceMap;
-	RHITexture* BRDFLUT = IBL.BRDFLUT;
+	RenderTexture* SkyBox = IBL.SkyBox;
+	RenderTexture* Radiance = IBL.RadianceMap;
+	RenderTexture* Irradiance = IBL.IrradianceMap;
+	RenderTexture* BRDFLUT = IBL.BRDFLUT;
 
-	std::vector<TextureWriteInfo> WriteTextures;
+	std::vector<TextureWithSamplerWriteInfo> WriteTextures;
 
-	auto PushIfNotNull = [&WriteTextures](RHITexture* Texture, uint32_t BindingPoint)
+	auto PushIfNotNull = [&WriteTextures](RenderTexture* Texture, uint32_t BindingPoint)
 	{
 		if(Texture)
 		{
-			WriteTextures.push_back({Texture, BindingPoint});
+			WriteTextures.push_back({
+				Texture->InternalTexture->DefaultTextureView,
+				Texture->Sampler,
+				BindingPoint,
+				0});
 		}	
 	};
 
@@ -197,13 +202,13 @@ void PostCombinedPass::CreateFrameBuffers(uint32_t Width, uint32_t Height)
 		FrameBuffers[i] = RHIPtr->CreateFrameBuffer(
 			Pass,
 			{
-				GlobalGBufferRef.GBufferA->DefaultView,
-				GlobalGBufferRef.GBufferB->DefaultView,
-				GlobalGBufferRef.GBufferC->DefaultView,
-				GlobalGBufferRef.GBufferD->DefaultView,
-				GlobalGBufferRef.GBufferE->DefaultView,
-				ResourcePtr->DepthStencilAttachment->DefaultView,
-				RHIPtr->GetSwapchainRenderAttachment((uint32_t)i).DefaultView},
+				GlobalGBufferRef.GBufferA->DefaultTextureView,
+				GlobalGBufferRef.GBufferB->DefaultTextureView,
+				GlobalGBufferRef.GBufferC->DefaultTextureView,
+				GlobalGBufferRef.GBufferD->DefaultTextureView,
+				GlobalGBufferRef.GBufferE->DefaultTextureView,
+				ResourcePtr->DepthStencilAttachment->DefaultTextureView,
+				RHIPtr->GetSwapchainTexture((uint32_t)i).DefaultTextureView},
 			Width,
 			Height,
 			1);
@@ -293,10 +298,10 @@ void PostCombinedPass::Initialize()
 void PostCombinedPass::DrawPass()
 {
 	IBLResource& CurrentGlobalIBL = ResourcePtr->GlobalIBLResource;
-	RHITexture* SkyBox = CurrentGlobalIBL.SkyBox;
-	RHITexture* Radiance = CurrentGlobalIBL.RadianceMap;
-	RHITexture* Irradiance = CurrentGlobalIBL.IrradianceMap;
-	RHITexture* BRDFLUT = CurrentGlobalIBL.BRDFLUT;
+	RenderTexture* SkyBox = CurrentGlobalIBL.SkyBox;
+	RenderTexture* Radiance = CurrentGlobalIBL.RadianceMap;
+	RenderTexture* Irradiance = CurrentGlobalIBL.IrradianceMap;
+	RenderTexture* BRDFLUT = CurrentGlobalIBL.BRDFLUT;
 
 	if(!SkyBox || !Radiance || !Irradiance || !BRDFLUT)
 	{
@@ -315,7 +320,7 @@ void PostCombinedPass::DrawPass()
 	ClearColors[6] = {{1.0f,1.0f,1.0f,1.0f}};
 	ClearColors[6].IsDepthStencil = false;
 
-	RHIRenderingPhase* Phase = RHIPtr->GetRenderPhase(RenderingTaskQueue_Graphics);
+	RHICommandList* Phase = RHIPtr->GetCommandList(RenderingTaskQueue_Graphics);
 	RHIPtr->StartRenderPass(
 		Phase,
 		Pass,
@@ -332,7 +337,7 @@ void PostCombinedPass::DrawPass()
 	RHIPtr->SetRenderViewport(Phase, RHIPtr->GetDefaultViewport(), 0);
 	RHIPtr->DrawMeshTask(Phase, 1, 1, 1);
 	RHIPtr->EndRenderPass(Phase);
-	RHIPtr->SubmitRenderingPhase(Phase, {WaitView}, {RHIPtr->GetRenderEndSemaphore()});
+	RHIPtr->SubmitCommandList(Phase, {WaitView}, {RHIPtr->GetRenderEndSemaphore()});
 
 	static size_t FrameNum = 0;
 	++FrameNum;

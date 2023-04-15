@@ -8,7 +8,7 @@
 
 struct AttachmentDescription
 {
-	TexturePixelFormat Format = TexturePixelFormat_RGB8;
+	RHIFormat Format = RHIFormat_RGB8;
 	AttachmentLoadOperation Onload = AttachmentLoadOperation_Nothing;
 	AttachmentStoreOperation OnStore = AttachmentStoreOperation_Nothing;
 

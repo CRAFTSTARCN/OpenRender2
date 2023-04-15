@@ -36,7 +36,7 @@ void MaterialBaseDataCreateResolver::ResolveData(RenderSwapData* Data)
 	Bindings.push_back({DescriptorType_Uniform_Buffer,  ParamUsage2ShaderStage(CreateData->BufferParamUsageState)});
 	for(size_t i=0; i<CreateData->TextureParams.size(); ++i)
 	{
-		Bindings.push_back({DescriptorType_Texture, ParamUsage2ShaderStage(CreateData->TextureParams[i].Usage)});
+		Bindings.push_back({DescriptorType_Texture_With_Sampler, ParamUsage2ShaderStage(CreateData->TextureParams[i].Usage)});
 	}
 	
 	RHIDescriptorLayout* Layout = RHIPtr->CreateDescriptorLayout(Bindings);
@@ -166,10 +166,10 @@ void MaterialInstanceDataCreateResolver::ResolveData(RenderSwapData* Data)
 	//Transfer memory from cpu to gpu only once
 	RHIPtr->SetBufferData(MaterialUniform, BufferCPUMem, RealSize, 0);
 
-	std::vector<TextureWriteInfo> TextureInfo;
+	std::vector<TextureWithSamplerWriteInfo> TextureInfo;
 	for(auto &Tex : CreateData->MaterialTextures)
 	{
-		RHITexture* Texture = nullptr;
+		RenderTexture* Texture = nullptr;
 		auto BindingIter = Base->ParameterTextureBindingMap.find(Tex.first);
 		if(BindingIter == Base->ParameterTextureBindingMap.end())
 		{
@@ -186,7 +186,11 @@ void MaterialInstanceDataCreateResolver::ResolveData(RenderSwapData* Data)
 			Texture = Iter->second;
 		}
 
-		TextureInfo.push_back({Texture, BindingIter->second.Binding});
+		TextureInfo.push_back({
+			Texture->InternalTexture->DefaultTextureView,
+			Texture->Sampler,
+			BindingIter->second.Binding,
+			0});
 	}
 
 	RHIPtr->WriteDescriptorSetMulti(MaterialInstanceSet, TextureInfo, {}, {
