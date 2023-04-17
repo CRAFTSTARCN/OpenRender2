@@ -15,8 +15,8 @@ struct AttachmentDescription
 	AttachmentLoadOperation OnStencilLoad = AttachmentLoadOperation_Nothing;
 	AttachmentStoreOperation OnStencilStore = AttachmentStoreOperation_Nothing;
 
-	TexImageLayout InitialLayout = TexImageLayout_Undefined;
-	TexImageLayout FinalLayout = TexImageLayout_Undefined;
+	TextureStatus InitialLayout = TextureStatus_Undefined;
+	TextureStatus FinalLayout = TextureStatus_Undefined;
 };
 
 struct ClearColorInfo

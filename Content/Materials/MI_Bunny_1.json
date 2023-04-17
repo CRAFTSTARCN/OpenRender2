@@ -1,0 +1,21 @@
+{
+    "AssetType" : "MaterialInstance",
+
+    "Base" : "./Materials/M_BasicDisney.json",
+
+    "Params" : {
+        "Emissive" : 
+        {
+            "R" : 0.3,
+            "G" : 0.3,
+            "B" : 0.3,
+            "A" : 1.0
+        },
+        "Metallic" :1.0,
+        "Specular" : 0.5,
+        "Roughness" : 0.0,
+        "Subsurface" : 0.0,
+        "Anisotropy" : 0.0,
+        "BaseColor" : "./Texture/T_Silver_Color.json"
+    }
+}

@@ -24,7 +24,7 @@ class VulkanRHI : public RHI
         VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
         VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME};
     
-    VulkanRHIContext* VulkanContext = nullptr;
+    VulkanRHIContext* Context = nullptr;
 
     //Command buffer status marking
     VulkanCmdBufferStatusStruct DrawCommandsStatus {};
@@ -190,6 +190,7 @@ public:
     RHIBuffer* CreateUniformBuffer(size_t Size) override;
     RHIBuffer* CreateVertexBuffer(size_t Size) override;
     RHIBuffer* CreateIndexBuffer(size_t Size) override;
+    RHIBuffer* CreateIndirectBuffer(size_t Size) override;
     RHIBuffer* CreateAnyBuffer(size_t Size, BufferUsage BufferUsage, BufferMemoryUsage Usage, bool Share) override;
 
     void SetBufferData(RHIBuffer* Buffer, const void* Data, size_t Size, size_t Offset) override;
@@ -212,9 +213,9 @@ public:
 
     uint32_t GetCurrentSwapchainImageIndex() override;
     
-    RHICommandList* GetCommandList(RenderingTaskQueue PhaseQueue) override;
+    RHICommandList* GetCommandList(RenderingTaskQueue CommandListQueue) override;
     void SubmitCommandList(
-        RHICommandList*& SubmittedPhase,
+        RHICommandList*& SubmittedCommandList,
         const std::vector<RHISemaphoreView*>& WaitSemaphore,
         const std::vector<RHISemaphore*>& SignalSemaphore) override;
 
@@ -227,7 +228,7 @@ public:
 
     RHIDescriptorLayout* CreateDescriptorLayout(const std::vector<DescriptorBindingInfo>& BindingInfos) override;
     RHIDescriptorSet* CreateDescriptorSet(RHIDescriptorLayout* RHILayout) override;
-    void WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::vector<TextureWithSamplerWriteInfo>& Textures, const std::vector<ImageWriteInfo>& Images, const std::vector<BufferWriteInfo>& Buffers) override;
+    void WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::vector<TextureWithSamplerWriteInfo>& Textures, const std::vector<TextureWriteInfo>& Images, const std::vector<BufferWriteInfo>& Buffers) override;
 
     RHIPipeline* CreateGraphicsPipeline(
         RHIRenderPass* Pass,
@@ -245,20 +246,20 @@ public:
         uint32_t LayerCount) override;
 
     void StartRenderPass(
-        RHICommandList* Phase,
+        RHICommandList* CommandList,
         RHIRenderPass* Pass,
         RHIFrameBuffer* FrameBuffer,
         const std::vector<ClearColorInfo>& ColorClearInfos,
         RHIRect2D RenderArea) override;
-    void SetRenderViewport(RHICommandList* Phase, const RHIViewport& Viewport, uint32_t Index) override;
-    void SetRenderScissor(RHICommandList* Phase, const RHIRect2D& Scissor, uint32_t Index) override;
-    void UseGraphicsPipeline(RHICommandList* Phase, RHIPipeline* GraphicsPipeline) override;
-    void UseComputePipeline(RHICommandList* Phase, RHIPipeline* ComputePipeline) override;
-    void SetDescriptorSet(RHICommandList* RenderingPhase, RHIPipeline* Pipeline, RHIDescriptorSet* Set, uint32_t BindIndex, const std::vector<uint32_t>& DynamicOffsets) override;
-    void DrawMeshTask(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ) override;
-    void Dispatch(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGropY, uint32_t WorkGroupZ) override;
-    void StartNextSubpass(RHICommandList* Phase) override;
-    void EndRenderPass(RHICommandList* Phase) override;
+    void SetRenderViewport(RHICommandList* CommandList, const RHIViewport& Viewport, uint32_t Index) override;
+    void SetRenderScissor(RHICommandList* CommandList, const RHIRect2D& Scissor, uint32_t Index) override;
+    void UseGraphicsPipeline(RHICommandList* CommandList, RHIPipeline* GraphicsPipeline) override;
+    void UseComputePipeline(RHICommandList* CommandList, RHIPipeline* ComputePipeline) override;
+    void SetDescriptorSet(RHICommandList* CommandList, RHIPipeline* Pipeline, RHIDescriptorSet* Set, uint32_t BindIndex, const std::vector<uint32_t>& DynamicOffsets) override;
+    void DrawMeshTask(RHICommandList* CommandList, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ) override;
+    void Dispatch(RHICommandList* CommandList, uint32_t WorkGroupX, uint32_t WorkGropY, uint32_t WorkGroupZ) override;
+    void StartNextSubpass(RHICommandList* CommandList) override;
+    void EndRenderPass(RHICommandList* CommandList) override;
     
     void BeginFrameRendering() override;
     void EndFrameRendering() override;

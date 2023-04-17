@@ -9,7 +9,7 @@
 struct SubpassAttachmentRef
 {
 	uint32_t Index = 0;
-	TexImageLayout RequireLayout = TexImageLayout_Color_Attachment;
+	TextureStatus RequireLayout = TextureStatus_Color_Attachment;
 };
 
 struct SubpassDependency

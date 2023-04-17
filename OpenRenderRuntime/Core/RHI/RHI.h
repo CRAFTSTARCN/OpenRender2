@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "RHISampler.h"
+#include "OpenRenderRuntime/Core/RHI/RHISampler.h"
 #include "OpenRenderRuntime/Core/RHI/RHIFrameBuffer.h"
 #include "OpenRenderRuntime/Core/RHI/RHISemaphoreView.h"
 #include "OpenRenderRuntime/Core/RHI/RHIPipeline.h"
@@ -26,8 +26,7 @@ class RHI
 protected:
     
     GLFWwindow* WindowPtr;
-    RHIContext* Context;
-
+	
 	//Default render attachment
 	std::vector<RHITexture*> DefaultAttachments {};
 
@@ -72,6 +71,7 @@ public:
     virtual RHIBuffer* CreateUniformBuffer(size_t Size) = 0;
     virtual RHIBuffer* CreateVertexBuffer(size_t Size) = 0;
     virtual RHIBuffer* CreateIndexBuffer(size_t Size) = 0;
+	virtual RHIBuffer* CreateIndirectBuffer(size_t Size) = 0;
     /*
      * Any buffer (usage and memory usage) creation
      * For example, if you want to create a vertex buffer which data will change each frame, use this api
@@ -117,14 +117,14 @@ public:
 	virtual uint32_t GetCurrentSwapchainImageIndex() = 0;
 
 	/*
-	 * Render phase getting and submitting should thread safe
+	 * Command list getting and submitting should thread safe
 	 */
-    virtual RHICommandList* GetCommandList(RenderingTaskQueue PhaseQueue) = 0;
+    virtual RHICommandList* GetCommandList(RenderingTaskQueue CommandListQueue) = 0;
 	/*
-	 * Submitted phase will deleted
+	 * Submitted commandlist will deleted
 	 */
 	virtual void SubmitCommandList(
-		RHICommandList*& SubmittedPhase,
+		RHICommandList*& SubmittedCommandList,
 		const std::vector<RHISemaphoreView*>& WaitSemaphore,
 		const std::vector<RHISemaphore*>& SignalSemaphore) = 0;
 
@@ -143,7 +143,7 @@ public:
 	virtual void WriteDescriptorSetMulti(
 		RHIDescriptorSet* WriteSet,
 		const std::vector<TextureWithSamplerWriteInfo>& Textures,
-		const std::vector<ImageWriteInfo>& Images,
+		const std::vector<TextureWriteInfo>& Images,
 		const std::vector<BufferWriteInfo>& Buffers) = 0;
 	
 	virtual RHIPipeline* CreateGraphicsPipeline(
@@ -169,20 +169,20 @@ public:
 	 * So no subpass index info or should pass to next subpass or end pass
 	 */
 	virtual void StartRenderPass(
-		RHICommandList* Phase,
+		RHICommandList* CommandList,
 		RHIRenderPass* Pass,
 		RHIFrameBuffer* FrameBuffer,
 		const std::vector<ClearColorInfo>& ColorClearInfos,
 		RHIRect2D RenderArea) = 0;
-	virtual void SetRenderViewport(RHICommandList* Phase, const RHIViewport& Viewport, uint32_t Index) = 0;
-	virtual void SetRenderScissor(RHICommandList* Phase, const RHIRect2D& Scissor, uint32_t Index) = 0;
-	virtual void UseGraphicsPipeline(RHICommandList* Phase, RHIPipeline* GraphicsPipeline) = 0;
-	virtual void UseComputePipeline(RHICommandList* Phase, RHIPipeline* ComputePipeline) = 0;
-	virtual void SetDescriptorSet(RHICommandList* RenderingPhase, RHIPipeline* Pipeline, RHIDescriptorSet* Set, uint32_t BindIndex, const std::vector<uint32_t>& DynamicOffsets) = 0;
-	virtual void DrawMeshTask(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ) = 0;
-	virtual void Dispatch(RHICommandList* Phase, uint32_t WorkGroupX, uint32_t WorkGropY, uint32_t WorkGroupZ) = 0;
-	virtual void StartNextSubpass(RHICommandList* Phase) = 0;
-	virtual void EndRenderPass(RHICommandList* Phase) = 0;
+	virtual void SetRenderViewport(RHICommandList* CommandList, const RHIViewport& Viewport, uint32_t Index) = 0;
+	virtual void SetRenderScissor(RHICommandList* CommandList, const RHIRect2D& Scissor, uint32_t Index) = 0;
+	virtual void UseGraphicsPipeline(RHICommandList* CommandList, RHIPipeline* GraphicsPipeline) = 0;
+	virtual void UseComputePipeline(RHICommandList* CommandList, RHIPipeline* ComputePipeline) = 0;
+	virtual void SetDescriptorSet(RHICommandList* CommandList, RHIPipeline* Pipeline, RHIDescriptorSet* Set, uint32_t BindIndex, const std::vector<uint32_t>& DynamicOffsets) = 0;
+	virtual void DrawMeshTask(RHICommandList* CommandList, uint32_t WorkGroupX, uint32_t WorkGroupY, uint32_t WorkGroupZ) = 0;
+	virtual void Dispatch(RHICommandList* CommandList, uint32_t WorkGroupX, uint32_t WorkGropY, uint32_t WorkGroupZ) = 0;
+	virtual void StartNextSubpass(RHICommandList* CommandList) = 0;
+	virtual void EndRenderPass(RHICommandList* CommandList) = 0;
 
 
 	virtual void SetResizeFunction(const std::function<void(uint32_t NewWidth, uint32_t NewHeight)>& Func);

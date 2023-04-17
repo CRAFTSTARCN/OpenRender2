@@ -22,6 +22,7 @@ class PostCombinedPass : public MeshMaterialPass, public IIBLPass
 	RHIDescriptorSet* DeferredShadingGBuffer = nullptr;
 
 	RHISemaphoreView* WaitView = nullptr;
+	Semaphore* SubmitSemaphore = nullptr;
 	
 	void CreateRenderPass();
 	

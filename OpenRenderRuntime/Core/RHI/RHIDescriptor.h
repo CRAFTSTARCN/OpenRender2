@@ -39,11 +39,11 @@ struct TextureWithSamplerWriteInfo
 	uint32_t Index = 0;
 };
 
-struct ImageWriteInfo
+struct TextureWriteInfo
 {
-	RHITextureView* ImageView = nullptr;
-	DescriptorType ImageType = DescriptorType_Storage_Image; //Input attachment or storage image
-	TexImageLayout ImageLayout = TexImageLayout_Shader_TexImage; //If write, use general
+	RHITextureView* TextureView = nullptr;
+	DescriptorType DescriptorType = DescriptorType_Storage_Image; //Input attachment or storage image
+	TextureStatus ImageLayout = TextureStatus_Shader_Read; //If write, use general
 	uint32_t Binding = 0;
 	uint32_t Index = 0;
 };

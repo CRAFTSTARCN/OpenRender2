@@ -95,7 +95,7 @@ void VulkanRHI::SetBufferDataDirect(VulkanRHIBuffer* Buffer, const void* Data, s
     memcpy(StartPtr, Data, Size);
     if(Buffer->MemoryUsage != BufferMemoryUsage_Host_Coherent)
     {
-        vmaFlushAllocation(VulkanContext->Allocator, Buffer->Allocation, Offset, Size);
+        vmaFlushAllocation(Context->Allocator, Buffer->Allocation, Offset, Size);
     }
 }
 
@@ -103,7 +103,7 @@ void VulkanRHI::SetBufferDataStaging(VulkanRHIBuffer* Buffer, const void* Data, 
 {
     VkBuffer StagingBuffer = VK_NULL_HANDLE;
     VkDeviceMemory StagingBufferMemory = VK_NULL_HANDLE;
-    bool Result = VKTool::CreateStagingBuffer(VulkanContext, Size, StagingBuffer, StagingBufferMemory);
+    bool Result = VKTool::CreateStagingBuffer(Context, Size, StagingBuffer, StagingBufferMemory);
     if(!Result)
     {
         LOG_ERROR_FUNCTION("Create staging buffer error");
@@ -111,9 +111,9 @@ void VulkanRHI::SetBufferDataStaging(VulkanRHIBuffer* Buffer, const void* Data, 
     }
 
     void* MappedPtr = nullptr;
-    vkMapMemory(VulkanContext->Device, StagingBufferMemory, 0, Size, 0, &MappedPtr);
+    vkMapMemory(Context->Device, StagingBufferMemory, 0, Size, 0, &MappedPtr);
     memcpy(MappedPtr, Data, Size);
-    vkUnmapMemory(VulkanContext->Device, StagingBufferMemory);
+    vkUnmapMemory(Context->Device, StagingBufferMemory);
 
     VkCommandBuffer Cmd = CreateSingletTimeCommandBuffer();
     VKTool::CopyBuffer2Buffer(Cmd, StagingBuffer, Buffer->BufferObject, Size, 0, Offset);
@@ -189,7 +189,7 @@ VkSampler VulkanRHI::GetSampler(const TextureSamplerCreateStruct& SampleInfo)
     VkSampler Sampler = VK_NULL_HANDLE;
 
     Sampler = VKTool::CreateVulkanSampler(
-        VulkanContext,
+        Context,
         WrapTransfer[SampleInfo.WrapU],
         WrapTransfer[SampleInfo.WrapV],
         WrapTransfer[SampleInfo.WrapW],
@@ -225,9 +225,9 @@ void VulkanRHI::ClearRunningCommandBuffer(VulkanCmdBufferStatusStruct& Struct)
 
 void VulkanRHI::SyncRunningCommands()
 {
-    vkQueueWaitIdle(VulkanContext->ComputeQueue);
-    vkQueueWaitIdle(VulkanContext->GraphicsQueue);
-    vkQueueWaitIdle(VulkanContext->PresentQueue); //For safety, sync presentation
+    vkQueueWaitIdle(Context->ComputeQueue);
+    vkQueueWaitIdle(Context->GraphicsQueue);
+    vkQueueWaitIdle(Context->PresentQueue); //For safety, sync presentation
     
     ClearRunningCommandBuffer(ComputeCommandsStatus);
     ClearRunningCommandBuffer(DrawCommandsStatus);
@@ -237,6 +237,6 @@ void VulkanRHI::DestroyAllSampler()
 {
     for(auto Sampler : SamplerTable)
     {
-        vkDestroySampler(VulkanContext->Device, Sampler.second, nullptr);
+        vkDestroySampler(Context->Device, Sampler.second, nullptr);
     }
 }

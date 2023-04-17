@@ -1,9 +1,30 @@
 ﻿#include "DefaultMaterialBasedQueue.h"
 
 
+void DefaultMaterialBasedQueue::SetScene(RenderScene* InScene)
+{
+	Scene = InScene;
+}
+
+void DefaultMaterialBasedQueue::Form()
+{
+}
 
 void DefaultMaterialBasedQueue::ResetQueue()
 {
+	for (auto& MBQ : InternalQueue)
+	{
+		for(auto& MIQ : MBQ.second->MaterialTable)
+		{
+			for(auto MQ : MIQ.second->MeshTable)
+			{
+				delete MQ.second;
+			}
+			delete MIQ.second;
+		}
+		delete MBQ.second;
+	}
+
 	InternalQueue.clear();
 }
 
@@ -13,32 +34,37 @@ void DefaultMaterialBasedQueue::InsertInstance(const RenderableInstance& Instanc
 	RenderMaterialInstance* MaterialInstance = Instance.MaterialPtr;
 	RenderMaterialBase* MaterialBase = MaterialInstance->Base;
 
-	size_t MeshId = Instance.MeshId;
-	size_t MaterialInstanceId = Instance.MaterialId;
-	size_t MaterialBaseId = MaterialBase->Id;
-	
-	auto GIter = InternalQueue.find(MaterialBase->Id); 
-	if(GIter == InternalQueue.end())
+	GlobalMutex.lock();
+	MaterialBaseSubQueue* MBQueue = InternalQueue[MaterialBase];
+	if(!MBQueue)
 	{
-		InternalQueue.emplace(MaterialBaseId, MaterialBaseSubQueue{{}, MaterialBase});
-		GIter = InternalQueue.find(MaterialBaseId);
+		MBQueue = new MaterialBaseSubQueue;
+		InternalQueue[MaterialBase] = MBQueue;
 	}
+	GlobalMutex.unlock();
 
-	auto MatIter = GIter->second.MaterialTable.find(MaterialInstanceId);
-	if(MatIter == GIter->second.MaterialTable.end())
+	MBQueue->MaterialBaseMutex.lock();
+	MaterialSubQueue* MIQueue = MBQueue->MaterialTable[MaterialInstance];
+	if(!MIQueue)
 	{
-		GIter->second.MaterialTable.emplace(MaterialInstanceId, MaterialSubQueue{{}, MaterialInstance});
-		MatIter = GIter->second.MaterialTable.find(MaterialInstanceId);
+		MIQueue = new MaterialSubQueue;
+		MBQueue->MaterialTable[MaterialInstance] = MIQueue;
 	}
+	MBQueue->MaterialBaseMutex.unlock();
 
-	auto MIter = MatIter->second.MeshTable.find(MeshId);
-	if(MIter == MatIter->second.MeshTable.end())
+	MIQueue->MaterialInstanceMutex.lock();
+	MeshSubQueue* MeshQueue = MIQueue->MeshTable[Mesh];
+
+	if(!MeshQueue)
 	{
-		MatIter->second.MeshTable.emplace(MeshId, MeshSubQueue{{}, Mesh});
-		MIter = MatIter->second.MeshTable.find(MeshId);
+		MeshQueue = new MeshSubQueue;
+		MIQueue->MeshTable[Mesh] = MeshQueue;
 	}
+	MIQueue->MaterialInstanceMutex.unlock();
 
-	MIter->second.MeshIndices.push_back(InstanceIndex);
+	MeshQueue->MeshMutex.lock();
+	MeshQueue->InstanceIndices.push_back(InstanceIndex);
+	MeshQueue->MeshMutex.unlock();
 }
 
 

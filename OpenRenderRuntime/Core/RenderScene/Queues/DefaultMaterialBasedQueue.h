@@ -5,36 +5,40 @@
 #include "OpenRenderRuntime/Core/RenderResource/RenderMesh.h"
 #include "OpenRenderRuntime/Core/RenderScene/RenderableInstance.h"
 
+class RenderScene;
+
 struct MeshSubQueue
 {
-	std::vector<size_t> MeshIndices {};
-	RenderMesh* QueueMesh = nullptr;
-	using IterType = std::vector<size_t>::iterator;
+	std::mutex MeshMutex;
+	std::vector<size_t> InstanceIndices {};
 };
 
 struct MaterialSubQueue
 {
-	std::unordered_map<size_t, MeshSubQueue> MeshTable {};
-	RenderMaterialInstance* QueueMaterialInstance = nullptr;
-	using IterType = std::unordered_map<size_t, MeshSubQueue>::iterator;
+	std::mutex MaterialInstanceMutex;
+	std::unordered_map<RenderMesh*, MeshSubQueue*> MeshTable {};
 };
 
 struct MaterialBaseSubQueue
-{
-	std::unordered_map<size_t, MaterialSubQueue> MaterialTable {};
-	RenderMaterialBase* QueueMaterialBase = nullptr;
-	using IterType = std::unordered_map<size_t, MaterialSubQueue>::iterator;
+{	
+	std::mutex MaterialBaseMutex;
+	std::unordered_map<RenderMaterialInstance*, MaterialSubQueue*> MaterialTable {};
 };
 
 class DefaultMaterialBasedQueue 
 {
 
 	
-	using InternalQueueIterType = std::unordered_map<size_t, MaterialBaseSubQueue>::iterator;
-
+	RenderScene* Scene = nullptr;
+	std::mutex GlobalMutex;
+	
 public:
 
-	std::unordered_map<size_t, MaterialBaseSubQueue> InternalQueue;
+	std::unordered_map<RenderMaterialBase*, MaterialBaseSubQueue*> InternalQueue;
+
+	void SetScene(RenderScene* InScene);
+
+	void Form();
 	
 	void ResetQueue();
 	void InsertInstance(const RenderableInstance& Instance, size_t InstanceIndex);

@@ -14,8 +14,8 @@ protected:
     
     std::unordered_map<std::size_t, size_t> RenderableIdIndexTable;
     
-    MultiTimeRunable* CullingThreads = nullptr;
-    size_t CullingThreadCount = 0;
+    MultiTimeRunable* SceneThreads = nullptr;
+    size_t SceneThreadCount = 0;
 
     constexpr static float MaxEmptyLoad = 0.33f;
     constexpr static int MaxEmptyNum = 128;
@@ -37,7 +37,6 @@ public:
     std::vector<RenderableInstance> Instances;
     
     DefaultMaterialBasedQueue PreRenderedOpaquedQueue {};
-    DefaultMaterialBasedQueue PostRenderedOpaquedQueue {};
     
     virtual ~RenderScene();
     
@@ -65,5 +64,16 @@ public:
      * HasInstance function will check if a instance in scene
      */
     virtual void TryAddInstance(const RenderableInstance& Instance);
-    
+
+	template<typename FT, typename... ArgT>
+	void RunSceneTask(int ThreadIndex, FT&& Func, ArgT&& ...Args)
+	{
+		if(ThreadIndex <= SceneThreadCount || ThreadIndex < 0)
+		{
+			LOG_ERROR_FUNCTION("{0} out of scene thread index", ThreadIndex);
+			return;
+		}
+
+		SceneThreads[ThreadIndex].Run(std::forward<FT&&>(Func), std::forward<ArgT&&>(Args)...);
+	}
 };

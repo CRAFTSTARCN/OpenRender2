@@ -53,8 +53,8 @@ public:
 
     VmaAllocator Allocator = VK_NULL_HANDLE;
 
-    VkCommandPool DrawCommandPool = VK_NULL_HANDLE;
-    VkCommandPool ComputeCommandPool = VK_NULL_HANDLE;
+    std::vector<VkCommandPool> DrawCommandPool {};
+    std::vector<VkCommandPool> ComputeCommandPool {};
     VkCommandPool SingleTimeCommandPool = VK_NULL_HANDLE;
     
     std::vector<VkCommandBuffer> DrawCommandBuffers {};

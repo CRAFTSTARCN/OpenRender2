@@ -35,7 +35,7 @@ RHITexture* VulkanRHI::CreateTexture2DManualMipmap(
     VkImageUsageFlags Usage = TransferImageUsage(Info.Usage);
     bool Result = VKTool::CreateTextureImage2D(
         this,
-        VulkanContext,
+        Context,
         Info.Width,
         Info.Height,
         FormatSizeTransfer[Info.Format],
@@ -83,7 +83,7 @@ RHITexture* VulkanRHI::CreateTexture2DManualMipmap(
         Height >>= 1;
         VKTool::LoadMipmapDataImage2D(
             CmdBuffer,
-            VulkanContext,
+            Context,
             Image,
             Width,
             Height,
@@ -121,7 +121,7 @@ RHITexture* VulkanRHI::CreateTexture2DManualMipmap(
     }
     
     VkImageView DefaultView = VKTool::CreateImageView(
-        VulkanContext,
+        Context,
         Image,
         FormatTransfer[Info.Format],
         TransferAspectWithFormat(Info.Format),
@@ -170,7 +170,7 @@ RHITexture* VulkanRHI::CreateTexture2DAutoMipmap(
     VkImageUsageFlags Usage = TransferImageUsage(Info.Usage);
     bool Result = VKTool::CreateTextureImage2D(
         this,
-        VulkanContext,
+        Context,
         Info.Width,
         Info.Height,
         FormatSizeTransfer[Info.Format],
@@ -220,7 +220,7 @@ RHITexture* VulkanRHI::CreateTexture2DAutoMipmap(
 
         VKTool::GenerateMipmapImage2D(
             CmdBuffer,
-            VulkanContext,
+            Context,
             Image,
             MipmapWidth,
             MipmapHeight,
@@ -263,7 +263,7 @@ RHITexture* VulkanRHI::CreateTexture2DAutoMipmap(
     EndSingleTimeCommandBuffer(CmdBuffer);
 
     VkImageView DefaultView = VKTool::CreateImageView(
-        VulkanContext,
+        Context,
         Image,
         FormatTransfer[Info.Format],
         TransferAspectWithFormat(Info.Format),
@@ -301,7 +301,7 @@ RHITexture* VulkanRHI::CreateTexture2D(const TextureInfo& Info)
     }
 
     bool Result = VKTool::CreateImage2D(
-        VulkanContext,
+        Context,
         Info.Width,
         Info.Height,
         FormatTransfer[Info.Format],
@@ -323,7 +323,7 @@ RHITexture* VulkanRHI::CreateTexture2D(const TextureInfo& Info)
 
     
     VkImageView DefaultView = VKTool::CreateImageView(
-        VulkanContext,
+        Context,
         Image,
         FormatTransfer[Info.Format],
         TransferAspectWithFormat(Info.Format),

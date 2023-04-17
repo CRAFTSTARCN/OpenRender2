@@ -51,10 +51,10 @@ public:
     MultiTimeRunable& operator=(MultiTimeRunable&&) = delete;
 
     template<typename FT, typename... ArgT>
-    auto Run(FT&& Func, ArgT ...Args)
+    auto Run(FT&& Func, ArgT&& ...Args)
     {
         Push.Wait();
-        auto Ptr = std::make_shared<std::packaged_task<std::invoke_result_t<FT, ArgT...>()>>(std::bind(std::forward<FT>(Func), std::forward<ArgT>(Args)...));
+        auto Ptr = std::make_shared<std::packaged_task<std::invoke_result_t<FT&&, ArgT&&...>()>>(std::bind(std::forward<FT>(Func), std::forward<ArgT>(Args)...));
         FuncPtr = std::make_shared<std::function<void()>>([Ptr]()
         {
             (*Ptr)();

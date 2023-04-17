@@ -16,27 +16,27 @@ void PreGBufferPass::CreateRenderPass()
 	ColorAttachment.Format = RHIFormat_RGBA8;
 	ColorAttachment.Onload = AttachmentLoadOperation_Clear;
 	ColorAttachment.OnStore = AttachmentStoreOperation_Store;
-	ColorAttachment.InitialLayout = TexImageLayout_Undefined;
-	ColorAttachment.FinalLayout = TexImageLayout_Color_Attachment;
+	ColorAttachment.InitialLayout = TextureStatus_Undefined;
+	ColorAttachment.FinalLayout = TextureStatus_Color_Attachment;
 
 	AttachmentDescription DepthStencilAttachment {};
 	DepthStencilAttachment.Format = RHIFormat_D32_FLOAT;
 	DepthStencilAttachment.Onload = AttachmentLoadOperation_Clear;
 	DepthStencilAttachment.OnStore = AttachmentStoreOperation_Store;
-	DepthStencilAttachment.InitialLayout = TexImageLayout_Undefined;
-	DepthStencilAttachment.FinalLayout = TexImageLayout_Depth_Stencil_Attachment;
+	DepthStencilAttachment.InitialLayout = TextureStatus_Undefined;
+	DepthStencilAttachment.FinalLayout = TextureStatus_Depth_Stencil_Attachment;
 
 	SubpassInfo PreGBufferSubpass {};
 	for(int i=0; i<5; ++i)
 	{
 		SubpassAttachmentRef Ref {};
 		Ref.Index = i;
-		Ref.RequireLayout = TexImageLayout_Color_Attachment;
+		Ref.RequireLayout = TextureStatus_Color_Attachment;
 		PreGBufferSubpass.ColorAttachment.push_back(Ref);
 	}
 
 	PreGBufferSubpass.DepthStencilAttachment.Index = 5;
-	PreGBufferSubpass.DepthStencilAttachment.RequireLayout = TexImageLayout_Depth_Stencil_Attachment;
+	PreGBufferSubpass.DepthStencilAttachment.RequireLayout = TextureStatus_Depth_Stencil_Attachment;
 	PreGBufferSubpass.RequireDepthStencil = true;
 	
 	Pass = RHIPtr->CreateRenderPass(
@@ -159,8 +159,17 @@ void PreGBufferPass::LoadPassTaskShader()
 
 void PreGBufferPass::CreateSemaphores()
 {
+	/*
+	 * GPU
+	 */
 	SignaledSemaphore = RHIPtr->CreateSemaphore();
-	BBPtr->RegisteredSemaphores.emplace("PreGBufferSemaphore", SignaledSemaphore);
+	BBPtr->RegisteredGPUSemaphores.emplace("PreGBufferSemaphore", SignaledSemaphore);
+
+	/*
+	 * CPU
+	 */
+	SubmitSemaphore = new Semaphore;
+	BBPtr->RegisteredCPUSemaphores.emplace("PreGBufferSubmit", SubmitSemaphore);
 }
 
 PreGBufferPass::PreGBufferPass()
@@ -194,7 +203,7 @@ void PreGBufferPass::Initialize()
 
 void PreGBufferPass::DrawPass()
 {
-	RHICommandList* Phase = RHIPtr->GetCommandList(RenderingTaskQueue_Graphics);
+	RHICommandList* CommandList = RHIPtr->GetCommandList(RenderingTaskQueue_Graphics);
 	std::vector<ClearColorInfo> ClearColors(6);
 
 	for(size_t i = 0; i < 5; ++i)
@@ -207,7 +216,7 @@ void PreGBufferPass::DrawPass()
 	ClearColors[5].Stencil = 0;
 	ClearColors[5].IsDepthStencil = true;
 	
-	RHIPtr->StartRenderPass(Phase, Pass, FrameBuffer, ClearColors, {
+	RHIPtr->StartRenderPass(CommandList, Pass, FrameBuffer, ClearColors, {
 		RHIPtr->GetSwapchainExtendWidth(),
 		RHIPtr->GetSwapchainExtendHeight(),
 		0,
@@ -220,7 +229,7 @@ void PreGBufferPass::DrawPass()
 	/*
 	 * Submit a cluster of instance to command buffer
 	 */
-	auto SubmitInstances = [&DCData, Phase, this](uint32_t Cnt, RHIPipeline* Pipeline, RenderMesh* Mesh)
+	auto SubmitInstances = [&DCData, CommandList, this](uint32_t Cnt, RHIPipeline* Pipeline, RenderMesh* Mesh)
 	{
 		DCData._darw_instance_count = Cnt;
 		DCData._enable_culling = 1;
@@ -235,42 +244,40 @@ void PreGBufferPass::DrawPass()
 				CurOffset);
 			ResourcePtr->AddGlobalBufferOffset(Size);
 		}
-		RHIPtr->SetDescriptorSet(Phase, Pipeline, DrawCallSet, 3, {uint32_t(CurOffset)});
+		RHIPtr->SetDescriptorSet(CommandList, Pipeline, DrawCallSet, 3, {uint32_t(CurOffset)});
 		uint32_t TaskCount = ORMath::RoundUp(Mesh->MeshletCount * Cnt, WORKGROUP_SIZE);
-		RHIPtr->DrawMeshTask(Phase, TaskCount >> 5, 1, 1);
+		RHIPtr->DrawMeshTask(CommandList, TaskCount >> 5, 1, 1);
 	};
 
 	//Per material base (pipeline binding, viewport scissor, and some global data
-	for(auto& [MBQId, MBQ] : Queue.InternalQueue)
+	for(auto& [MBQMB, MBQ] : Queue.InternalQueue)
 	{
-		if(MBQ.QueueMaterialBase->Pipelines.size() <= MaterialPassId || !MBQ.QueueMaterialBase->Pipelines[MaterialPassId])
+		if(MBQMB->Pipelines.size() <= MaterialPassId || !MBQMB->Pipelines[MaterialPassId])
 		{
 			LOG_ERROR_FUNCTION("No pipeline for this render pass");
 			continue;
 		}
 
-		RHIPipeline* MaterialPipeline = MBQ.QueueMaterialBase->Pipelines[MaterialPassId];
+		RHIPipeline* MaterialPipeline = MBQMB->Pipelines[MaterialPassId];
 
-		RHIPtr->UseGraphicsPipeline(Phase, MaterialPipeline);
-		RHIPtr->SetRenderScissor(Phase, RHIPtr->GetDefaultScissor(), 0);
-		RHIPtr->SetRenderViewport(Phase, RHIPtr->GetDefaultViewport(), 0);
-		RHIPtr->SetDescriptorSet(Phase, MaterialPipeline, GlobalDataSet, 0, {});
+		RHIPtr->UseGraphicsPipeline(CommandList, MaterialPipeline);
+		RHIPtr->SetRenderScissor(CommandList, RHIPtr->GetDefaultScissor(), 0);
+		RHIPtr->SetRenderViewport(CommandList, RHIPtr->GetDefaultViewport(), 0);
+		RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, GlobalDataSet, 0, {});
 
 		//Per material instance, binding the descriptor set (param) of each material instance
-		for(auto& [MQId, MQ] : MBQ.MaterialTable)
+		for(auto& [MQMI, MQ] : (*MBQ).MaterialTable)
 		{
-			RenderMaterialInstance* MInstance = MQ.QueueMaterialInstance;
-			RHIPtr->SetDescriptorSet(Phase, MaterialPipeline, MInstance->MaterialDescriptorSet, 2, {});
+			RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, MQMI->MaterialDescriptorSet, 2, {});
 
 			//Per mesh, binding mesh's vertex, meshlet, index data
-			for(auto& [MId, M] : MQ.MeshTable)
+			for(auto& [Mesh, MeshQ] : (*MQ).MeshTable)
 			{
-				RenderMesh* Mesh = M.QueueMesh;
-				RHIPtr->SetDescriptorSet(Phase, MaterialPipeline, Mesh->Descriptor, 1, {});
+				RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, Mesh->Descriptor, 1, {});
 
 				uint32_t Cnt = 0;
 				DCData._meshlet_count = Mesh->MeshletCount;
-				for(auto& Instance : M.MeshIndices)
+				for(auto& Instance : (*MeshQ).InstanceIndices)
 				{
 					RenderableInstance& RI = ScenePtr->Instances[Instance];
 					memcpy(DCData._instances[Cnt].mat_model,
@@ -298,11 +305,12 @@ void PreGBufferPass::DrawPass()
 		
 	}
 	
-	RHIPtr->EndRenderPass(Phase);
+	RHIPtr->EndRenderPass(CommandList);
 
 	static size_t FrameNum = 0;
-	RHIPtr->SubmitCommandList(Phase, {}, {/*SignaledSemaphore*/} );
+	RHIPtr->SubmitCommandList(CommandList, {}, {/*SignaledSemaphore*/} );
 	++FrameNum;
+	SubmitSemaphore->Signal();
 }
 
 void PreGBufferPass::Terminate()
@@ -320,8 +328,10 @@ void PreGBufferPass::Terminate()
 	RHIPtr->DestroyDescriptorSet(GlobalDataSet);
 	RHIPtr->DestroyDescriptorLayout(GlobalDataLayout);
 
-	BBPtr->RegisteredSemaphores.erase("PreGBufferSemaphore");
+	BBPtr->RegisteredGPUSemaphores.erase("PreGBufferSemaphore");
 	RHIPtr->DestroySemaphore(SignaledSemaphore);
+
+	BBPtr->RegisteredCPUSemaphores.erase("PreGBufferSubmit");
 }
 
 void PreGBufferPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase)

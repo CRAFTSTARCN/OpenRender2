@@ -133,20 +133,27 @@ typedef uint32_t PipelineStage;
 
 /*
  * Image layout, image is for usage
- * Direct vulkan cast
  */
-enum TexImageLayout
+enum TextureStatus
 {
-	TexImageLayout_Undefined = 0,
-	TexImageLayout_General = 1,
-	TexImageLayout_Color_Attachment = 2,
-	TexImageLayout_Depth_Stencil_Attachment = 3,
-	TexImageLayout_Depth_Stencil_Readonly = 4,
-	TexImageLayout_Shader_TexImage = 5,
-	TexImageLayout_Transfer_Src = 6,
-	TexImageLayout_Transfer_Dst = 8,
+	TextureStatus_Undefined = 0,
+	TextureStatus_General = 1,
+	TextureStatus_Color_Attachment = 2,
+	TextureStatus_Depth_Stencil_Attachment = 3,
+	TextureStatus_Depth_Stencil_Readonly = 4,
+	TextureStatus_Shader_Read = 5,
+	TextureStatus_Transfer_Src = 6,
+	TextureStatus_Transfer_Dst = 7,
 
-	TexImageLayout_For_Present = 1000001002
+	TextureStatus_Shader_Write = 10,
+	TextureStatus_Resolve_Src  = 11,
+	TextureStatus_Resolve_Dst  = 12,
+
+	TextureStatus_Depth_Attachment = 1000241000,
+	TextureStatus_Depth_ReadOnly = 1000241001,
+	TextureStatus_Stencil_Attachment = 1000241002,
+	TextureStatus_Stencil_ReadOnly = 1000241003,
+	TextureStatus_For_Present = 1000001002
 };
 
 /*

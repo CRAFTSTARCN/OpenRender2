@@ -37,7 +37,9 @@ protected:
 
 	MeshMaterialPass* PreGBuffer = nullptr;
 	RenderPass* Post = nullptr;
-	
+
+	MultiTimeRunable PreThread;
+	MultiTimeRunable PostThread;
 	
 public:
 

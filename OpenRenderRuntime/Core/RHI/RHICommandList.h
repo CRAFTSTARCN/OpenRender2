@@ -6,5 +6,5 @@ class RHICommandList
 {
     
 public:
-    RenderingTaskQueue PhaseQueue = RenderingTaskQueue_Graphics;
+    RenderingTaskQueue CommandListQueue = RenderingTaskQueue_Graphics;
 };

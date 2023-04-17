@@ -17,6 +17,8 @@ class  PreGBufferPass : public MeshMaterialPass
 
 	RHIDescriptorLayout* DrawCallLayout = nullptr;
 	RHIDescriptorSet* DrawCallSet = nullptr;
+
+	Semaphore* SubmitSemaphore = nullptr;
 	
 	void CreateRenderPass();
 
