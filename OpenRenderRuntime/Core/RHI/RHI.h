@@ -17,7 +17,6 @@
 #include "OpenRenderRuntime/Core/RHI/RHIShaderModule.h"
 #include "OpenRenderRuntime/Core/RHI/RHITexture.h"
 #include "OpenRenderRuntime/Core/RHI/RenderWindowProxy.h"
-#include "OpenRenderRuntime/Core/RHI/RHIRenderTarget.h"
 #include "OpenRenderRuntime/Core/RHI/RHISemaphore.h"
 
 class RHI

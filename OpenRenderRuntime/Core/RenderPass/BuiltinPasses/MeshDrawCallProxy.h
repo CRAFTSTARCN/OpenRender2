@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-#define MAX_INSTANCE_DRAW 64u
+#define MAX_INSTANCE_DRAW 1023u
 #define WORKGROUP_SIZE 32u
 
 struct InstanceData

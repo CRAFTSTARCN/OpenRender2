@@ -102,31 +102,39 @@ void RenderScene::SetupCameraVisibility()
 
 void RenderScene::FormQueues()
 {
-    size_t ThisTime = 0;
-    
-    for(auto & Instance : Instances)
+    if(Queues.size() <= 1 || SceneThreadCount == 0)
     {
-        if(Instance.IsValid &&
-           (Instance.Visible & 1) &&
-           (Instance.MaterialPtr->Base->BlendMode == PipelineBlendMode_Opaque || Instance.MaterialPtr->Base->BlendMode == PipelineBlendMode_Masked))
+        for(auto && [Name, Queue] : Queues)
         {
-            ++ThisTime;
-            PreRenderedOpaquedQueue.InsertInstance(Instance, Instance.InstanceID);
+            Queue->Form();
         }
     }
-    
-    static size_t LastTime = 0;
-
-    if(ThisTime != LastTime)
+    else
     {
-        LOG_INFO_FUNCTION("Current rendering instance count :{0}", ThisTime);
-        LastTime = ThisTime;
+        size_t Index = 0;
+        for(auto && [Name, Queue] : Queues)
+        {
+            SceneThreads[Index].Run([&](RenderQueue* ToQueue)
+            {
+                ToQueue->Form();
+            }, Queue);
+            Index = (Index + 1) % SceneThreadCount;
+        }
+
+        for(Index = 0; Index < SceneThreadCount; ++Index)
+        {
+            SceneThreads[Index].WaitForPushable();
+        }
     }
+   
 }
 
 void RenderScene::Prepare()
 {
-    PreRenderedOpaquedQueue.ResetQueue();
+    for(auto && [Name, Queue] : Queues)
+    {
+        Queue->ResetQueue();
+    }
 }
 
 void RenderScene::OnPostTick()
@@ -161,4 +169,15 @@ void RenderScene::TryAddInstance(const RenderableInstance& Instance)
     
     Instances.push_back(Instance);
     TotalInstance++;
+}
+
+void RenderScene::RegisterQueue(const std::string& Name, RenderQueue* RegisteredQueue)
+{
+    if(!RegisteredQueue)
+    {
+        return;
+    }
+
+    RegisteredQueue->SetScene(this);
+    Queues[Name] = RegisteredQueue;
 }

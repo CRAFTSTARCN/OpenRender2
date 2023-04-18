@@ -6,7 +6,6 @@
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialInstance.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialBase.h"
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
-#include "OpenRenderRuntime/Core/RHI/RHIRenderTarget.h"
 #include "OpenRenderRuntime/Core/RHI/RHITexture.h"
 
 struct GBuffer

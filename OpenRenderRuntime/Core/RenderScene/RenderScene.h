@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vector>
 
+#include "RenderQueue.h"
 #include "OpenRenderRuntime/Core/RenderScene/Lights.h"
 #include "OpenRenderRuntime/Core/RenderScene/RenderableInstance.h"
 #include "OpenRenderRuntime/Core/RenderScene/SceneCamera.h"
@@ -35,9 +36,8 @@ public:
 	glm::vec3 AmbientLight {};
     
     std::vector<RenderableInstance> Instances;
-    
-    DefaultMaterialBasedQueue PreRenderedOpaquedQueue {};
-    
+	std::unordered_map<std::string, RenderQueue*> Queues;
+	
     virtual ~RenderScene();
     
     virtual void Initialize();
@@ -65,6 +65,8 @@ public:
      */
     virtual void TryAddInstance(const RenderableInstance& Instance);
 
+	virtual void RegisterQueue(const std::string& Name, RenderQueue* RegisteredQueue);
+	
 	template<typename FT, typename... ArgT>
 	void RunSceneTask(int ThreadIndex, FT&& Func, ArgT&& ...Args)
 	{

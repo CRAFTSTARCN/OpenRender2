@@ -11,7 +11,7 @@
 
 //Instance draw info
 
-#define MAX_INSTANCE_DRAW 64
+#define MAX_INSTANCE_DRAW 1023
 
 //radiance map lod
 #define MAX_RADIANCE_LOD

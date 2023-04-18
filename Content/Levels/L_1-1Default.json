@@ -41003,9 +41003,9 @@
         }
     ],
     "Skybox": {
-        "Skybox": "./Texture/AnimSky/T_Anim_Skybox.json",
-        "Radiance": "./Texture/AnimSky/T_Anim_Radiance.json",
-        "Irradiance": "./Texture/AnimSky/T_Anim_Irradiance.json"
+        "Skybox": "./Texture/Vestibule/T_Vestibule_Skybox.json",
+        "Radiance": "./Texture/Vestibule/T_Vestibule_Radiance.json",
+        "Irradiance": "./Texture/Vestibule/T_Vestibule_Irradiance.json"
     },
     "Camera": {
         "Position": {
@@ -41026,8 +41026,8 @@
     },
     "DirectionalLight": {
         "Color": {
-            "R": 0.7,
-            "G": 0.8,
+            "R": 1.0,
+            "G": 1.0,
             "B": 1.0,
             "A": 1.0
         },

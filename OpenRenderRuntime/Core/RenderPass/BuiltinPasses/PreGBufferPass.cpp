@@ -199,6 +199,8 @@ void PreGBufferPass::Initialize()
 	LoadPassTaskShader();
 	CreateDrawCallDataSetAndLayout();
 	CreateSemaphores();
+
+	ScenePtr->RegisterQueue("GBufferQueue", &Queue);
 }
 
 void PreGBufferPass::DrawPass()
@@ -221,9 +223,7 @@ void PreGBufferPass::DrawPass()
 		RHIPtr->GetSwapchainExtendHeight(),
 		0,
 		0});
-
-	DefaultMaterialBasedQueue& Queue = ScenePtr->PreRenderedOpaquedQueue;
-
+	
 	MeshDrawCallDataProxty DCData {};
 
 	/*
@@ -266,18 +266,18 @@ void PreGBufferPass::DrawPass()
 		RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, GlobalDataSet, 0, {});
 
 		//Per material instance, binding the descriptor set (param) of each material instance
-		for(auto& [MQMI, MQ] : (*MBQ).MaterialTable)
+		for(auto& [MQMI, MQ] : MBQ.MaterialTable)
 		{
 			RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, MQMI->MaterialDescriptorSet, 2, {});
 
 			//Per mesh, binding mesh's vertex, meshlet, index data
-			for(auto& [Mesh, MeshQ] : (*MQ).MeshTable)
+			for(auto& [Mesh, MeshQ] : MQ.MeshTable)
 			{
 				RHIPtr->SetDescriptorSet(CommandList, MaterialPipeline, Mesh->Descriptor, 1, {});
 
 				uint32_t Cnt = 0;
 				DCData._meshlet_count = Mesh->MeshletCount;
-				for(auto& Instance : (*MeshQ).InstanceIndices)
+				for(auto& Instance : MeshQ.InstanceIndices)
 				{
 					RenderableInstance& RI = ScenePtr->Instances[Instance];
 					memcpy(DCData._instances[Cnt].mat_model,
@@ -332,6 +332,8 @@ void PreGBufferPass::Terminate()
 	RHIPtr->DestroySemaphore(SignaledSemaphore);
 
 	BBPtr->RegisteredCPUSemaphores.erase("PreGBufferSubmit");
+	ScenePtr->Queues.erase("GBufferQueue");
+
 }
 
 void PreGBufferPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase)

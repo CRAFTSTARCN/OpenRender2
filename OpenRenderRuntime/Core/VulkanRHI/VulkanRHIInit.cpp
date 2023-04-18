@@ -5,8 +5,6 @@
 #include <cassert>
 
 #include "VulkanRHITexture.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderTarget.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImage.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITextureView.h"
 
 #define COMPILE_VULKAN_VERSION VK_API_VERSION_1_3

@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "OpenRenderRuntime/Core/RHI/RHITexImage.h"
 #include "OpenRenderRuntime/Core/RHI/RHITextureView.h"
 
 struct TextureSamplerCreateStruct
