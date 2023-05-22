@@ -10,8 +10,6 @@ from Theading import add_work, all_shutdown
 
 
 def test():
-    add_work(SPVCompiler.compile_shader_2_spv_glsl, "../Content/Materials/Shaders/BasicDisneyPBR.GBuffer.Mesh.glsl", SPVCompiler.STAGE_MESH, "../Content/Materials/Shaders/BasicDisneyPBR.GBuffer.Mesh.spv")
-    add_work(SPVCompiler.compile_shader_2_spv_glsl, "../Content/Materials/Shaders/BasicDisneyPBR.GBuffer.Frag.glsl", SPVCompiler.STAGE_FRAG, "../Content/Materials/Shaders/BasicDisneyPBR.GBuffer.Frag.spv")
 
     add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/PreGBufferTask.Task.glsl", SPVCompiler.STAGE_TASK, "../PassShader/spv/PreGBufferTask.Task.spv")
     add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/DeferredShadingMesh.Mesh.glsl", SPVCompiler.STAGE_MESH, "../PassShader/spv/DeferredShadingMesh.Mesh.spv")

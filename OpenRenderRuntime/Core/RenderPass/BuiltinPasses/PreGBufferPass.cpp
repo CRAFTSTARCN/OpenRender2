@@ -260,6 +260,7 @@ void PreGBufferPass::DrawPass()
 
 		RHIPipeline* MaterialPipeline = MBQMB->Pipelines[MaterialPassId];
 
+		DCData._backface_culling = !MBQMB->DoubleSided;
 		RHIPtr->UseGraphicsPipeline(CommandList, MaterialPipeline);
 		RHIPtr->SetRenderScissor(CommandList, RHIPtr->GetDefaultScissor(), 0);
 		RHIPtr->SetRenderViewport(CommandList, RHIPtr->GetDefaultViewport(), 0);

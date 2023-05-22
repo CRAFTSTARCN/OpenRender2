@@ -4,6 +4,11 @@
 
 #include "OpenRenderRuntime/Util/Logger.h"
 
+glm::vec3 MeshLetBuilder::Ai2GLM(const aiVector3D& AiVector)
+{
+	return glm::vec3(AiVector.x, AiVector.y, AiVector.z);
+}
+
 std::vector<std::vector<uint32_t>> MeshLetBuilder::BuildIndexGroup(aiMesh* Mesh, const std::vector<uint32_t>& Indices)
 {
 	std::vector<std::vector<uint32_t>> IndexClusters;
@@ -91,12 +96,11 @@ std::vector<std::vector<uint32_t>> MeshLetBuilder::BuildIndexGroup(aiMesh* Mesh,
 				break;
 			}
 
-			uint32_t NextIndex = FindNearestVertexLocation(Last.back(), Mesh, Mesh->mVertices[Last.back()]);
+			uint32_t NextIndex = FindNearestVertexLocation(Mesh, Mesh->mVertices[Last.back()]);
 
-			if(Last.back() == NextIndex)
+			if(NextIndex == UINT32_MAX)
 			{
 				break;
-				
 			}
 			CurrentUsage = &VertexUsage[NextIndex];
 			{
@@ -127,11 +131,11 @@ std::vector<std::vector<uint32_t>> MeshLetBuilder::BuildIndexGroup(aiMesh* Mesh,
 	return IndexClusters;
 }
 
-uint32_t MeshLetBuilder::FindNearestVertexLocation(uint32_t FromIndex, aiMesh* Mesh, const aiVector3D& Position)
+uint32_t MeshLetBuilder::FindNearestVertexLocation(aiMesh* Mesh, const aiVector3D& Position)
 {
 
-	uint32_t Res = FromIndex;
-	float Dist = 0;
+	uint32_t Res = UINT32_MAX;
+	float Dist = std::numeric_limits<float>::max();
 	
 	for(auto Iter = VertexUsage.begin(); Iter != VertexUsage.end();  ++Iter)
 	{
@@ -153,7 +157,7 @@ uint32_t MeshLetBuilder::FindNearestVertexLocation(uint32_t FromIndex, aiMesh* M
 		
 		aiVector3D NewLocation = Mesh->mVertices[Iter->first];
 		float CurDist = (NewLocation - Position).Length();
-		if(Res == FromIndex || Dist > CurDist)
+		if(Res == UINT32_MAX || Dist > CurDist)
 		{
 			Dist = CurDist;
 			Res = Iter->first;
@@ -216,24 +220,28 @@ void MeshLetBuilder::BuildMeshletFromIndex(aiMesh* Mesh, const std::vector<uint3
 	Meshlets.MeshletInfo.push_back({
 		((uint32_t)Indices.size() / 3) << 16,
 		(uint32_t)Meshlets.VertexIndices.size(), 
-		(uint32_t)Meshlets.PrimitiveIndices.size()});
+		(uint32_t)Meshlets.PrimitiveIndices.size(),
+			0, 0, 0, 0, 0, 0, 0, 0});
 
 	std::unordered_map<uint32_t, uint8_t> VertexIndexMap;
 
+	/*
 	uint32_t IndexZero = Indices[0];
 	float MinX(Mesh->mVertices[IndexZero].x), MinY(Mesh->mVertices[IndexZero].y), MinZ(Mesh->mVertices[IndexZero].z);
 	float MaxX(Mesh->mVertices[IndexZero].x), MaxY(Mesh->mVertices[IndexZero].y), MaxZ(Mesh->mVertices[IndexZero].z);
+	*/
 	
 	uint8_t PrimOffsetIndex = 0;
 	for(uint32_t i=0; i<Indices.size(); ++i)
 	{
-		uint32_t CurIndex =Indices[i];
+		uint32_t CurIndex = Indices[i];
 		if(auto Iter = VertexIndexMap.find(CurIndex); Iter == VertexIndexMap.end())
 		{
 			VertexIndexMap.insert({CurIndex, PrimOffsetIndex});
 			Meshlets.VertexIndices.push_back(CurIndex);
 			Meshlets.PrimitiveIndices.push_back(PrimOffsetIndex);
 			++PrimOffsetIndex;
+			/*
 			MinX = std::min(Mesh->mVertices[CurIndex].x, MinX);
 			MinY = std::min(Mesh->mVertices[CurIndex].y, MinY);
 			MinZ = std::min(Mesh->mVertices[CurIndex].z, MinZ);
@@ -241,6 +249,7 @@ void MeshLetBuilder::BuildMeshletFromIndex(aiMesh* Mesh, const std::vector<uint3
 			MaxX = std::max(Mesh->mVertices[CurIndex].x, MaxX);
 			MaxY = std::max(Mesh->mVertices[CurIndex].y, MaxY);
 			MaxZ = std::max(Mesh->mVertices[CurIndex].z, MaxZ);
+			*/
 		}
 		else
 		{
@@ -249,7 +258,9 @@ void MeshLetBuilder::BuildMeshletFromIndex(aiMesh* Mesh, const std::vector<uint3
 	}
 
 	Meshlets.MeshletInfo.back().VertexAndPrimCount |= PrimOffsetIndex;
+	BuildBounds(Meshlets.MeshletInfo.back(), Indices, Meshlets.VertexIndices, Mesh->mVertices);
 
+	/*
 	Meshlets.MeshletInfo.back().CenterX = (MinX + MaxX) / 2.0f;
 	Meshlets.MeshletInfo.back().CenterY = (MinY + MaxY) / 2.0f;
 	Meshlets.MeshletInfo.back().CenterZ = (MinZ + MaxZ) / 2.0f;
@@ -257,6 +268,26 @@ void MeshLetBuilder::BuildMeshletFromIndex(aiMesh* Mesh, const std::vector<uint3
 	Meshlets.MeshletInfo.back().ExtendX = (MaxX - MinX) / 2.0f;
 	Meshlets.MeshletInfo.back().ExtendY = (MaxY - MinY) / 2.0f;
 	Meshlets.MeshletInfo.back().ExtendZ = (MaxZ - MinZ) / 2.0f;
+	*/
+}
+
+uint32_t MeshLetBuilder::BuildConeData(float X, float Y, float Z, float CutOff)
+{
+	uint32_t Res = 0;
+	Res |= (uint32_t)SNorm2Uint8(X);
+	Res |= ((uint32_t)SNorm2Uint8(Y) << 8);
+	Res |= ((uint32_t)SNorm2Uint8(Z) << 16);
+	Res |= ((uint32_t)SNorm2Uint8(CutOff) << 24);
+
+	return Res;
+
+}
+
+uint8_t MeshLetBuilder::SNorm2Uint8(float Flt)
+{
+	float Unsigned = (Flt + 1.0f) / 2.0f;
+	uint32_t Val = uint32_t((float)(Unsigned * (float)UINT8_MAX) + 0.5f);
+	return (uint8_t)std::min(255u, Val);
 }
 
 
@@ -305,3 +336,5 @@ MeshletPackage MeshLetBuilder::BuildMeshlet(aiMesh* Mesh)
 	
 	return Meshlets;
 }
+
+

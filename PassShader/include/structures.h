@@ -16,6 +16,8 @@ struct Meshlet
 	uint PrimIndexBegin;
 	float CenterX, CenterY, CenterZ;
 	float ExtendX, ExtendY, ExtendZ;
+    uint Cone;
+    float ApexOffset;
 };
 
 struct PointLight 

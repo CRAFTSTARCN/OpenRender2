@@ -1,0 +1,10 @@
+{
+    "AssetType" : "StaticMeshPack",
+
+    "MeshAddress" : "./Mesh/Statue/marble_bust_01_4k.fbx",
+    "MeshletAddress" : "./Mesh/Statue/Statue.mlt",
+
+    "DefaultMaterial" : [
+        "./Materials/MI_Statue.json"
+    ]
+}

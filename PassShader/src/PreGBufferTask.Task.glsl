@@ -35,7 +35,7 @@ layout(std430, set = 3, binding = 0) readonly buffer _drawcall_data
     uint _meshlet_count;
     uint _darw_instance_count;
     uint _enable_culling;
-    uint _pre_instances_padding;
+    uint _backface_culling;
 
     InstanceData _instances[MAX_INSTANCE_DRAW];
 };
@@ -69,8 +69,11 @@ void main()
                   _meshlets[meshlet_index].ExtendY,
                   _meshlets[meshlet_index].ExtendZ);
 
+    vec3 center_world;
     bool render = (instance_id < _darw_instance_count) &&
-                  early_culling(c, e, _instances[instance_id].mat_model, camera_frustum);
+                  early_culling(c, e, _instances[instance_id].mat_model, camera_frustum, center_world);
+    render = render && ((_backface_culling == 0) || 
+                       backface_culling(camera_position, center_world, _instances[instance_id].mat_model, _meshlets[meshlet_index].Cone, _meshlets[meshlet_index].ApexOffset));
     
     uvec4 vote = subgroupBallot(render);
     uint meshlet_num = subgroupBallotBitCount(vote);
