@@ -15,7 +15,7 @@ public:
 	uint32_t Width = 0;
 	uint32_t Height = 0;
 	ParamUsage AllUsage = ParamUsageBit_Geometry | ParamUsageBit_Fragment;
-	TexturePixelFormat Format = TexturePixelFormat_RGB8_SRGB;
+	RHIFormat Format = RHIFormat_RGB8_SRGB;
 	TextureType CreateDataType = TextureType_2D;
 
 	uint32_t SampleAnisotropy = 0;

@@ -1,4 +1,10 @@
 
+float unpack_snorm_uint8(uint val) 
+{
+    float unpacked_u = float(val) / 255.0;
+    return unpacked_u * 2.0 - 1.0;
+}
+
 void transform_aabb(in vec3 center, in vec3 extend, in mat4 transform_mat, out vec3 o_center, out vec3 o_extend) 
 {
     vec3 min_corner = center - extend;
@@ -67,9 +73,8 @@ bool intersect(in vec3 center, in vec3 extend, in vec4 plane)
     return -r <= temp;
 }
 
-bool early_culling(in vec3 center, in vec3 extend, in mat4 model_mat, in Frustum frustum) 
+bool early_culling(in vec3 center, in vec3 extend, in mat4 model_mat, in Frustum frustum, out vec3 center_world) 
 {
-    vec3 center_world;
     vec3 extend_world;
     transform_aabb_model(center, extend, model_mat, center_world, extend_world);
 
@@ -81,4 +86,25 @@ bool early_culling(in vec3 center, in vec3 extend, in mat4 model_mat, in Frustum
 
     return ans;
 
+}
+
+vec4 unpack_cone(uint val) 
+{
+    uint x = val & 0xff;
+    uint y = (val >> 8) & 0xff;
+    uint z = (val >> 16) & 0xff;
+    uint w = (val >> 24) & 0xff;
+
+    return vec4(unpack_snorm_uint8(x), unpack_snorm_uint8(y), unpack_snorm_uint8(z), unpack_snorm_uint8(w));
+}
+
+bool backface_culling(in vec3 camera_pos, in vec3 center_world, in mat4 mat_world, in uint cone, in float cone_apex) 
+{
+    vec4 normal_cone = unpack_cone(cone);
+    vec3 axis_world = (mat_world * vec4(normal_cone.xyz, 0.0)).xyz;
+    vec3 apex = center_world - axis_world * cone_apex;
+    vec3 neg_axis = normalize(-axis_world);
+    vec3 view = normalize(camera_pos - apex);
+
+    return dot(view, neg_axis) < normal_cone.w;
 }

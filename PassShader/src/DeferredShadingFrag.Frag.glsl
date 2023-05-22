@@ -97,8 +97,9 @@ void main()
         float radiance_lod = 5.0 * data.roughness;
         vec3 radiance_L_in = textureLod(radiance_map, R, radiance_lod).xyz;
         vec3 L_irradiance = textureLod(irradiance_map, data.normal, 0.0).xyz;
-        vec2 BRDF_IBL = textureLod(BRDF_LUT, vec2(dot(data.normal, V),  1.0 - data.roughness), 0.0).rg;
-        vec3 F_IBL = F_schlick_roughness(F0, dot(data.normal, V), data.roughness);
+        float dot_nv = clamp(dot(data.normal, V), 0.0 ,1.0);
+        vec2 BRDF_IBL = textureLod(BRDF_LUT, vec2(dot_nv,  1.0 - data.roughness), 0.0).rg;
+        vec3 F_IBL = F_schlick_roughness(F0, dot_nv, data.roughness);
         vec3 L_IBL = radiance_L_in * (F_IBL * BRDF_IBL.x + BRDF_IBL.y) + 
                      (vec3(1.0, 1.0, 1.0) - F_IBL) * (1.0 - data.metallic) * L_irradiance * data.base_color;
 
@@ -106,9 +107,33 @@ void main()
     }
     else if(shader_model_id == REDUCED_LIT)
     {
-        //for testing pipeline
-        out_frag_color = vec4(gbuffer_a.rgb, 1.0);
-        //out_frag_color = vec4(1.0, 1.0, 0.0, 1.0);
+        ReducedLitGBufferData data = DecodeReducedLitGBuffer(gbuffer_a, gbuffer_b, gbuffer_c, gbuffer_d);
+        vec3 F0 = get_F0(data.base_color, data.specular, data.metallic);
+        vec3 V = normalize(camera_position - world_position);
+        vec3 R = reflect(-V, data.normal);
+
+        vec3 default_lit_BRDF = BRDF_MQ(
+            directional_light_direction, 
+            V, 
+            data.normal, 
+            F0,
+            data.base_color,
+            data.metallic,
+            data.roughness);
+        
+        vec3 L_in = directional_light_color * dot(directional_light_direction, data.normal);
+        vec3 L_reflect = L_in * default_lit_BRDF;
+        
+        float radiance_lod = 5.0 * data.roughness;
+        vec3 radiance_L_in = textureLod(radiance_map, R, radiance_lod).xyz;
+        vec3 L_irradiance = textureLod(irradiance_map, data.normal, 0.0).xyz;
+        float dot_nv = clamp(dot(data.normal, V), 0.0 ,1.0);
+        vec2 BRDF_IBL = textureLod(BRDF_LUT, vec2(dot_nv,  1.0 - data.roughness), 0.0).rg;
+        vec3 F_IBL = F_schlick_roughness(F0, dot_nv, data.roughness);
+        vec3 L_IBL = radiance_L_in * (F_IBL * BRDF_IBL.x + BRDF_IBL.y) + 
+                     (vec3(1.0, 1.0, 1.0) - F_IBL) * (1.0 - data.metallic) * L_irradiance * data.base_color;
+
+        out_frag_color = vec4(L_reflect + L_IBL + data.emissive, 1.0);
     }
     else
     {

@@ -154,8 +154,7 @@ public:
         VmaAllocation& OutAllocation,
         VkImageCreateFlags ImageCreateFlag,
         uint32_t LayerCount = 1,
-        uint32_t MipmapLevelCount = 1,
-        bool Share = false);
+        uint32_t MipmapLevelCount = 1);
 
     /*
      * Create Image View
@@ -183,6 +182,7 @@ public:
         uint32_t PixelByteSize,
         uint32_t LayerCount,
         VkFormat Format,
+        VkImageUsageFlags Usage,
         VkImageCreateFlags ImageCreateFlags, //For cubemap or normal texture
         uint32_t MipmapCount,
         const std::vector<void*>& Data,
@@ -199,8 +199,7 @@ public:
         VkBufferUsageFlags BufferUsage,
         VmaMemoryUsage MemoryUsage,
         VkBuffer& OutBuffer,
-        VmaAllocation& OutAllocation,
-        bool Share = false);
+        VmaAllocation& OutAllocation);
 
     /*
      * Creating a staging buffer
@@ -296,7 +295,6 @@ public:
         VkFilter MinFilter,
         VkFilter MagFilter,
         VkSamplerMipmapMode MipmapFilter,
-        uint32_t MipmapLevel,
         uint32_t Anisotropy,
         uint32_t BorderColor);
 

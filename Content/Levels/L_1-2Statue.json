@@ -1,0 +1,89 @@
+{
+    "AssetType" : "Level",
+
+    "Objects" : 
+    [
+        {
+            "Name" : "Statue",
+            "Scripts" : 
+            [
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "Mesh",
+                    "Parent" : null,
+                    "MaterialOverride": null,
+                    "StaticMesh" : "./Mesh/S_Statue.json",
+                    "PackIndex" : 0,
+                    "Blocker" : true,
+                    "Transform" : 
+                    {
+                        "Translate" : 
+                        {
+                            "X" : 0.0,
+                            "Y" : 0.0,
+                            "Z" : -50.0
+                        },
+                        "Rotation" : 
+                        {
+                            "X" : -90,
+                            "Y" : 0,
+                            "Z" : 0.0
+                        },
+                        "Scale" : 
+                        {
+                            "X" : 20.0,
+                            "Y" : 20.0,
+                            "Z" : 20.0
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+
+    "Skybox" :  
+    {
+        "Skybox": "./Texture/Vestibule/T_Vestibule_Skybox.json",
+        "Radiance": "./Texture/Vestibule/T_Vestibule_Radiance.json",
+        "Irradiance": "./Texture/Vestibule/T_Vestibule_Irradiance.json"
+    },
+
+    "Camera" : 
+    {
+        "Position" : 
+        {
+            "X" : 0.0,
+            "Y" : 0.0,
+            "Z" : 0.0
+        },
+        "Rotation" : 
+        {
+            "X" : 0.0,
+            "Y" : -90.0,
+            "Z" : 0.0
+        },
+
+        "Near" : 0.1,
+        "Far" : 100000,
+        "FOVV" : 75.0,
+
+        "CameraMoveSpeed" : 70.0,
+        "CameraLookSpeed" : 0.1
+    },
+    "DirectionalLight":
+    {
+        "Color" : 
+        {
+            "R" : 0.7,
+            "G" : 0.8,
+            "B" : 1.0,
+            "A" : 1.0
+        },
+        "Direction" : 
+        {
+            "X" : 0.0,
+            "Y" : 0.72,
+            "Z" : 0.72
+        }
+    }
+}

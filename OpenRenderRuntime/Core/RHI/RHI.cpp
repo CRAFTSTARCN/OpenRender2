@@ -1,6 +1,6 @@
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
 
-RHI::RHI() :  WindowPtr(nullptr), Context(nullptr)
+RHI::RHI() :  WindowPtr(nullptr)
 {
 }
 

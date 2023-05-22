@@ -172,7 +172,7 @@ bool VKTool::CreateImage2D(VulkanRHIContext* Context, uint32_t Width, uint32_t H
                            VkMemoryPropertyFlags MemoryProperty,
                            VkImage& OutImage, VmaAllocation& OutAllocation, VkImageCreateFlags ImageCreateFlag,
                            uint32_t LayerCount,
-                           uint32_t MipmapLevelCount, bool Share)
+                           uint32_t MipmapLevelCount)
 {
     VkImageCreateInfo ImageInfo {};
     ImageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -188,16 +188,8 @@ bool VKTool::CreateImage2D(VulkanRHIContext* Context, uint32_t Width, uint32_t H
     ImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     ImageInfo.usage         = ImageUsageFlag;
     ImageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
-	if(Share && Context->GraphicsQueueFamilyIndex != Context->ComputeQueueFamilyIndex)
-	{
-		uint32_t QueueShared[] = {(uint32_t)Context->GraphicsQueueFamilyIndex, (uint32_t)Context->ComputeQueueFamilyIndex};
-		ImageInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
-		ImageInfo.pQueueFamilyIndices = QueueShared;
-	}
-	else
-	{
-		ImageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-	}
+	ImageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+	
 
     VkResult Result = vkCreateImage(Context->Device, &ImageInfo, nullptr, &OutImage);
     if(Result != VK_SUCCESS)
@@ -243,7 +235,8 @@ VkImageView VKTool::CreateImageView(VulkanRHIContext* Context, VkImage& Image, V
 }
 
 bool VKTool::CreateTextureImage2D(VulkanRHI* RHI, VulkanRHIContext* Context, uint32_t Width, uint32_t Height,
-                                  uint32_t PixelByteSize, uint32_t LayerCount, VkFormat Format, VkImageCreateFlags ImageCreateFlags, uint32_t MipmapCount,
+                                  uint32_t PixelByteSize, uint32_t LayerCount, VkFormat Format, VkImageUsageFlags Usage,
+                                  VkImageCreateFlags ImageCreateFlags, uint32_t MipmapCount,
                                   const std::vector<void*>& Data, VkImage& OutImage, VmaAllocation& OutAllocation)
 {
     if(LayerCount != Data.size())
@@ -262,7 +255,7 @@ bool VKTool::CreateTextureImage2D(VulkanRHI* RHI, VulkanRHIContext* Context, uin
     ImageInfo.format        = Format;
     ImageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
     ImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    ImageInfo.usage         = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+    ImageInfo.usage         = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | Usage;
     ImageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
     ImageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -323,22 +316,14 @@ bool VKTool::CreateTextureImage2D(VulkanRHI* RHI, VulkanRHIContext* Context, uin
 }
 
 bool VKTool::CreateBuffer(VulkanRHIContext* Context, VkDeviceSize BufferSize, VkBufferUsageFlags BufferUsage,
-                          VmaMemoryUsage MemoryUsage, VkBuffer& OutBuffer, VmaAllocation& OutAllocation, bool Share)
+                          VmaMemoryUsage MemoryUsage, VkBuffer& OutBuffer, VmaAllocation& OutAllocation)
 {
 	VkBufferCreateInfo BufferInfo {};
 	BufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	BufferInfo.size = BufferSize;
 	BufferInfo.usage = BufferUsage;
-	if(Share && Context->GraphicsQueueFamilyIndex != Context->ComputeQueueFamilyIndex)
-	{
-		BufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
-		uint32_t QueueShared[] = {(uint32_t)Context->GraphicsQueueFamilyIndex, (uint32_t)Context->GraphicsQueueFamilyIndex};
-		BufferInfo.pQueueFamilyIndices = QueueShared;
-	}
-	else
-	{
-		BufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	}
+	BufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	
 
 	VmaAllocationCreateInfo MemoryAllocationInfo {};
 	MemoryAllocationInfo.usage = MemoryUsage;
@@ -546,7 +531,7 @@ void VKTool::LoadMipmapDataImage2D(VkCommandBuffer CmdBuffer, VulkanRHIContext* 
 
 VkSampler VKTool::CreateVulkanSampler(VulkanRHIContext* Context, VkSamplerAddressMode WrapU,
                                       VkSamplerAddressMode WrapV, VkSamplerAddressMode WrapW, VkFilter MinFilter, VkFilter MagFilter,
-                                      VkSamplerMipmapMode MipmapFilter, uint32_t MipmapLevel, uint32_t Anisotropy, uint32_t BorderColor)
+                                      VkSamplerMipmapMode MipmapFilter, uint32_t Anisotropy, uint32_t BorderColor)
 {
 	static float AnisotropyLimit = [Context]()
 	{
@@ -592,7 +577,8 @@ VkSampler VKTool::CreateVulkanSampler(VulkanRHIContext* Context, VkSamplerAddres
 	SamplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
 	SamplerInfo.mipmapMode              = MipmapFilter;
 
-	SamplerInfo.maxLod = (float)(MipmapLevel - 1u);
+	SamplerInfo.minLod = 0.0f;
+	SamplerInfo.maxLod = std::numeric_limits<float>::max();
 
 	VkSampler Sampler = VK_NULL_HANDLE;
 	VkResult Result = vkCreateSampler(Context->Device, &SamplerInfo, nullptr, &Sampler);

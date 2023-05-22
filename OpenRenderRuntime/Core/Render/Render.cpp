@@ -58,8 +58,11 @@ void Render::Tick(float DeltaTime)
 	SetupGlobalData();
 
 	RenderRHI->BeginFrameRendering();
-	PreGBuffer->DrawPass();
-	Post->DrawPass();
+	PreThread.Run([&](){PreGBuffer->DrawPass();});
+	PostThread.Run([&](){Post->DrawPass();});
+
+	PreThread.WaitForPushable();
+	PostThread.WaitForPushable();
 	RenderRHI->EndFrameRendering();
 
 	Scene->OnPostTick();
@@ -101,9 +104,13 @@ void Render::Init(RenderSwapDataCenter* InSwapDataCenter)
 void Render::Terminate()
 {
 	RenderRHI->PreTerminate();
-
+	
 	Post->Terminate();
 	PreGBuffer->Terminate();
+
+	PreThread.WaitForPushable();
+	PostThread.WaitForPushable();
+	
 	Scene->Terminate();
 	
 	Resources->Terminate();

@@ -16,7 +16,7 @@ MAT_DATA_TAG = "[[MATERIAL_DATA]]"
 INCLUDE_FILE_TAG = "[[INCLUDE_FILES]]"
 MESH_VERT_PROCESS_TAG = "[[MESH_VERTEX_PROCESSOR]]"
 FRAG_PROCESS_TAG = "[[FRAGMENT_GBUFFER_FUNCTION]]"
-
+FUNCTIONS_TAG = "[[FUNCTIONS]]"
 
 #Process file mark
 VERT_INCLUDE_FILE_MARK = "[[VertexProcessInclude]]"
@@ -25,7 +25,7 @@ TARGET_POSITION_MARK = "[[SystemTargetPosition]]"
 
 FRAG_INCLUDE_FILE_MARK = "[[FragmentProcessInclude]]"
 FRAG_PROCESS_MARK = "[[GBufferFragment]]"
-
+FUNCTIONS_MARK = "[[Functions]]"
 
 #functioin template
 FUNC_TEMP_VERT ='''
@@ -99,12 +99,13 @@ def generate_shader_file_glsl(passbody, param_table, vert_usage, frag_usage, sha
     mesh_shader_file_path = os.path.join(Config.CACHE_DIR, mesh_shader_rel_path)
     frag_shader_file_path = os.path.join(Config.CACHE_DIR, frag_shader_rel_path)
 
-    generate_mesh_shader_file_glsl(passbody, material_buffer_str, tex_str, vert_usage, mesh_shader_file_path)
-    generate_frag_shader_file_glsl(passbody, material_buffer_str, tex_str, frag_usage, frag_shader_file_path)
+    global_function_str = Util.get_data_between(passbody, FUNCTIONS_MARK)
+    generate_mesh_shader_file_glsl(passbody, material_buffer_str, tex_str, vert_usage, global_function_str, mesh_shader_file_path)
+    generate_frag_shader_file_glsl(passbody, material_buffer_str, tex_str, frag_usage, global_function_str, frag_shader_file_path)
 
     return (mesh_shader_file_path, frag_shader_file_path)
 
-def generate_mesh_shader_file_glsl(passbody : str, material_buffer_str, tex_str, vert_usage, save_path):
+def generate_mesh_shader_file_glsl(passbody : str, material_buffer_str, tex_str, vert_usage, func_body, save_path):
     mesh_full_path = os.path.join(Config.TEMPLATE_FILE_PATH, MESH_TEMPLATE_NAME)
     template_str = Util.load_file_2_str(mesh_full_path)
     
@@ -113,7 +114,8 @@ def generate_mesh_shader_file_glsl(passbody : str, material_buffer_str, tex_str,
     template_str = template_str.replace(MAT_DATA_TAG, material_str)
 
     template_str = template_str.replace(INCLUDE_FILE_TAG, Util.get_data_between(passbody, VERT_INCLUDE_FILE_MARK))
-    
+    template_str = template_str.replace(FUNCTIONS_TAG, func_body)
+
     process_content = Util.get_data_between(passbody, MESH_VERT_PROCESS_MARK)
     process_content = process_content.replace(TARGET_POSITION_MARK, "gl_MeshVerticesEXT[vertex_id].gl_Position")
 
@@ -121,7 +123,7 @@ def generate_mesh_shader_file_glsl(passbody : str, material_buffer_str, tex_str,
 
     Util.save_str_2_file(save_path, template_str)
 
-def generate_frag_shader_file_glsl(passbody : str, material_buffer_str, tex_str, frag_usage, save_path):
+def generate_frag_shader_file_glsl(passbody : str, material_buffer_str, tex_str, frag_usage, func_body, save_path):
     frag_full_path = os.path.join(Config.TEMPLATE_FILE_PATH, FRAG_TEMPLATE_NAME)
     template_str = Util.load_file_2_str(frag_full_path)
     
@@ -130,7 +132,8 @@ def generate_frag_shader_file_glsl(passbody : str, material_buffer_str, tex_str,
     template_str = template_str.replace(MAT_DATA_TAG, material_str)
 
     template_str = template_str.replace(INCLUDE_FILE_TAG, '#include "BuiltinModel/UnlitUtil.glsl" \n' + Util.get_data_between(passbody, FRAG_INCLUDE_FILE_MARK))
-    
+    template_str = template_str.replace(FUNCTIONS_TAG, func_body)
+
     process_content = Util.get_data_between(passbody, FRAG_PROCESS_MARK)
 
     template_str = template_str.replace(FRAG_PROCESS_TAG, FUNC_TEMP_FRAG.replace("[[BODY]]", process_content))

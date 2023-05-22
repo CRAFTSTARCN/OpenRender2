@@ -6,6 +6,7 @@ STAGE_TASK = "task"
 STAGE_MESH = "mesh"
 STAGE_FRAG = "frag"
 STAGE_VERT = "vert"
+STAGE_COMP = "comp"
 
 def log_compile_info(cat : str, content : str):
     print("[{}]: {}".format(cat, content))

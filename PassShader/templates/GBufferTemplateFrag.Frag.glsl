@@ -32,6 +32,8 @@ layout(location = 4) out vec4 gbuffer_e;
 
 [[INCLUDE_FILES]]
 
+[[FUNCTIONS]]
+
 [[FRAGMENT_GBUFFER_FUNCTION]]
 // void fragment_function(
 //     out vec4 gbuffer_a,

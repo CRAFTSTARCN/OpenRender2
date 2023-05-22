@@ -7,7 +7,7 @@ class TextureImporter : public AssetImporter
 
 protected:
 
-	TexturePixelFormat AnalysisFormat(Json AssetJson);
+	RHIFormat AnalysisFormat(Json AssetJson);
 	TextureSamplerCreateStruct AnalysisSample(Json AssetJson);
 	
 public:

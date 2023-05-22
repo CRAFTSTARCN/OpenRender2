@@ -1,6 +1,34 @@
 ﻿#include "DefaultMaterialBasedQueue.h"
 
+#include "OpenRenderRuntime/Core/RenderScene/RenderScene.h"
 
+void DefaultMaterialBasedQueue::Form()
+{
+	if(!Scene)
+	{
+		return;
+	}
+	size_t ThisTime = 0;
+    
+	for(auto & Instance : Scene->Instances)
+	{
+		if(Instance.IsValid &&
+		   (Instance.Visible & 1 << SceneBit) &&
+		   (Instance.MaterialPtr->Base->BlendMode == PipelineBlendMode_Opaque || Instance.MaterialPtr->Base->BlendMode == PipelineBlendMode_Masked))
+		{
+			++ThisTime;
+			InsertInstance(Instance, Instance.InstanceID);
+		}
+	}
+    
+	static size_t LastTime = 0;
+
+	if(ThisTime != LastTime)
+	{
+		LOG_INFO_FUNCTION("Current rendering instance count :{0}", ThisTime);
+		LastTime = ThisTime;
+	}
+}
 
 void DefaultMaterialBasedQueue::ResetQueue()
 {
@@ -13,32 +41,10 @@ void DefaultMaterialBasedQueue::InsertInstance(const RenderableInstance& Instanc
 	RenderMaterialInstance* MaterialInstance = Instance.MaterialPtr;
 	RenderMaterialBase* MaterialBase = MaterialInstance->Base;
 
-	size_t MeshId = Instance.MeshId;
-	size_t MaterialInstanceId = Instance.MaterialId;
-	size_t MaterialBaseId = MaterialBase->Id;
-	
-	auto GIter = InternalQueue.find(MaterialBase->Id); 
-	if(GIter == InternalQueue.end())
-	{
-		InternalQueue.emplace(MaterialBaseId, MaterialBaseSubQueue{{}, MaterialBase});
-		GIter = InternalQueue.find(MaterialBaseId);
-	}
-
-	auto MatIter = GIter->second.MaterialTable.find(MaterialInstanceId);
-	if(MatIter == GIter->second.MaterialTable.end())
-	{
-		GIter->second.MaterialTable.emplace(MaterialInstanceId, MaterialSubQueue{{}, MaterialInstance});
-		MatIter = GIter->second.MaterialTable.find(MaterialInstanceId);
-	}
-
-	auto MIter = MatIter->second.MeshTable.find(MeshId);
-	if(MIter == MatIter->second.MeshTable.end())
-	{
-		MatIter->second.MeshTable.emplace(MeshId, MeshSubQueue{{}, Mesh});
-		MIter = MatIter->second.MeshTable.find(MeshId);
-	}
-
-	MIter->second.MeshIndices.push_back(InstanceIndex);
+	MaterialBaseSubQueue& MBQueue = InternalQueue[MaterialBase];
+	MaterialSubQueue& MIQueue = MBQueue.MaterialTable[MaterialInstance];
+	MeshSubQueue& MeshQueue = MIQueue.MeshTable[Mesh];
+	MeshQueue.InstanceIndices.push_back(InstanceIndex);
 }
 
 

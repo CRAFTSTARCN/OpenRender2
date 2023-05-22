@@ -5,7 +5,7 @@ struct ReducedLitGBufferData
     vec3 base_color;
     float ambient_occlusion;
     vec3 normal;
-    vec3 emmisive;
+    vec3 emissive;
 
     float metallic, specular, roughness;
 };
@@ -24,7 +24,7 @@ void EncodeReducedLitGBuffer(
     out_gbuffer_c.g = data.specular;
     out_gbuffer_c.b = data.roughness;
     out_gbuffer_c.a = (float(DEFAULT_LIT) / float(255));
-    out_gbuffer_d.rgb = data.emmisive;
+    out_gbuffer_d.rgb = data.emissive;
 }
 
 ReducedLitGBufferData DecodeReducedLitGBuffer(
@@ -37,7 +37,7 @@ ReducedLitGBufferData DecodeReducedLitGBuffer(
     data.base_color = in_gbuffer_a.rgb;
     data.ambient_occlusion = in_gbuffer_a.a;
     data.normal = (in_gbuffer_b.rgb * 2.0 - 1.0);
-    data.emmisive = in_gbuffer_d.rgb;
+    data.emissive = in_gbuffer_d.rgb;
     data.metallic = in_gbuffer_c.r;
     data.specular = in_gbuffer_c.g;
     data.roughness = in_gbuffer_c.b;

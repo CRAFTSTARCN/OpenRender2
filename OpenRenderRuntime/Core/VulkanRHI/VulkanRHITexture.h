@@ -7,6 +7,7 @@ class VulkanRHITexture : public RHITexture
 {
 	
 public:
-
-	VkSampler TextureSampler = VK_NULL_HANDLE;
+	
+	VkImage Image = VK_NULL_HANDLE;
+	VmaAllocation Allocation = VK_NULL_HANDLE;
 };

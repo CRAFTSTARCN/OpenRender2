@@ -26,7 +26,7 @@ void MeshDataCreateResolver::ResolveData(RenderSwapData* Data)
 	}
 
 	size_t SizeVert = MeshData->VertexData.size() * sizeof(VertexData);
-	RHIBuffer* VertexBuffer = RHIPtr->CreateStorageBuffer(SizeVert, BufferMemoryUsage_GPU_Only,false);
+	RHIBuffer* VertexBuffer = RHIPtr->CreateStorageBuffer(SizeVert, BufferMemoryUsage_GPU_Only);
 	if(!VertexBuffer)
 	{
 		LOG_ERROR_FUNCTION("Fail to create vertex buffer");
@@ -36,7 +36,7 @@ void MeshDataCreateResolver::ResolveData(RenderSwapData* Data)
 	RHIPtr->SetBufferData(VertexBuffer, MeshData->VertexData.data(), SizeVert, 0);
 	
 	size_t SizeMeshlet = Package.MeshletInfo.size() * sizeof(MeshletDescription);
-	RHIBuffer* MeshletBuffer = RHIPtr->CreateStorageBuffer(SizeMeshlet, BufferMemoryUsage_GPU_Only, false);
+	RHIBuffer* MeshletBuffer = RHIPtr->CreateStorageBuffer(SizeMeshlet, BufferMemoryUsage_GPU_Only);
 	if(!MeshletBuffer)
 	{
 		LOG_ERROR_FUNCTION("Fail to create meshlet buffer");
@@ -47,7 +47,7 @@ void MeshDataCreateResolver::ResolveData(RenderSwapData* Data)
 	RHIPtr->SetBufferData(MeshletBuffer, Package.MeshletInfo.data(), SizeMeshlet, 0);
 	
 	size_t SizeVI = Package.VertexIndices.size() * sizeof(uint32_t);
-	RHIBuffer* VertexIndexBuffer = RHIPtr->CreateStorageBuffer(SizeVI, BufferMemoryUsage_GPU_Only, false);
+	RHIBuffer* VertexIndexBuffer = RHIPtr->CreateStorageBuffer(SizeVI, BufferMemoryUsage_GPU_Only);
 	if(!VertexIndexBuffer)
 	{
 		LOG_ERROR_FUNCTION("Fail to create prim index buffer");
@@ -59,7 +59,7 @@ void MeshDataCreateResolver::ResolveData(RenderSwapData* Data)
 	RHIPtr->SetBufferData(VertexIndexBuffer, Package.VertexIndices.data(), SizeVI, 0);
 	
 	size_t SizePI = Package.PrimitiveIndices.size() * sizeof(uint8_t);
-	RHIBuffer* PrimIndexBuffer = RHIPtr->CreateStorageBuffer(SizePI, BufferMemoryUsage_GPU_Only, false);
+	RHIBuffer* PrimIndexBuffer = RHIPtr->CreateStorageBuffer(SizePI, BufferMemoryUsage_GPU_Only);
 	if(!PrimIndexBuffer)
 	{
 		LOG_ERROR_FUNCTION("Fail to create prim index buffer");

@@ -3,14 +3,16 @@
 /*
  * Buffer type
  */
-enum BufferTypeBit
+
+enum BufferUsageBit
 {
-	BufferTypeBit_Vertex  = 1,
-	BufferTypeBit_Index   = 1 << 1,
-	BufferTypeBit_Storage = 1 << 2,
-	BufferTypeBit_Uniform = 1 << 3
+	BufferUsageBit_Vertex   = 1,
+	BufferUsageBit_Index    = 1 << 1,
+	BufferUsageBit_Storage  = 1 << 2,
+	BufferUsageBit_Uniform  = 1 << 3,
+	BufferUsageBit_Indirect = 1 << 4
 };
-typedef uint32_t BufferTypeFlag;
+typedef uint32_t BufferUsage;
 
 /*
  * Buffer memory usage
@@ -28,10 +30,10 @@ enum BufferMemoryUsage
  */ 
 enum MaterialParamType
 {
-	MaterialParamType_Vector4Param,
-	MaterialParamType_ScalarParam,
-	MaterialParamType_Texture,
-	MaterialParamType_Texture_Cube
+	MaterialParamType_Vector4Param = 0,
+	MaterialParamType_ScalarParam = 1,
+	MaterialParamType_Texture = 2,
+	MaterialParamType_Texture_Cube = 3
 };
 
 /*
@@ -47,39 +49,33 @@ enum PipelineBlendMode
 	PipelineBlendMode_Additive
 };
 
-/*
- * Render attachment type
- */
-enum RenderImageAttachmentType
-{
-
-	RenderImageAttachmentType_Color_Attachment = 0,
-	RenderImageAttachmentType_Depth_Attachment = 1,
-    
-	RenderImageAttachmentType_Post_Process_ImageBuffer = 2,
-    
-	RenderImageAttachmentType_SwapChain = 3,
-
-	RenderImageAttachmentType_Depth_Stencil_Attachment = 4,
-
-	RnederImageAttachmentType_ComputeStorage = 5
-};
 
 /*
- * Image usage
+ * Texture usage
  */
-enum ImageExtraUsageBit
+enum TextureUsageBit
 {
-	ImageExtraUsageBit_Sample          = 1,
-	ImageExtraUsageBit_Storage_Image   = 1 << 1,
-	ImageExtraUsageBit_Transfer_Dst    = 1 << 2,
-	ImageExtraUsageBit_Transfer_Src    = 1 << 3,
-	ImageExtraUsageBit_InputAttachment = 1 << 4,
-	ImageExtraUsageBit_TransientInputAttachment = 1 << 5
-
-
+	TextureUsageBit_Sample                   = 1,
+	TextureUsageBit_Storage_Image            = 1 << 1,
+	TextureUsageBit_Transfer_Dst             = 1 << 2,
+	TextureUsageBit_Transfer_Src             = 1 << 3,
+	TextureUsageBit_InputAttachment          = 1 << 4,
+	TextureUsageBit_ColorAttachment          = 1 << 5,
+	TextureUsageBit_DepthStencil             = 1 << 6,
+	TextureUsageBit_TransientInputAttachment = 1 << 7,
 };
-typedef uint32_t ImageExtraUsage;
+
+typedef uint32_t TextureUsage;
+
+enum TexturePlaneBit
+{
+	TexturePlaneBit_Color   = 0,
+	TexturePlaneBit_Depth   = 1,
+	TexturePlaneBit_Stencil = 1 << 1
+};
+
+typedef uint32_t TexturePlane;
+
 
 /*
  * Render queue
@@ -137,20 +133,27 @@ typedef uint32_t PipelineStage;
 
 /*
  * Image layout, image is for usage
- * Direct vulkan cast
  */
-enum TexImageLayout
+enum TextureStatus
 {
-	TexImageLayout_Undefined = 0,
-	TexImageLayout_General = 1,
-	TexImageLayout_Color_Attachment = 2,
-	TexImageLayout_Depth_Stencil_Attachment = 3,
-	TexImageLayout_Depth_Stencil_Readonly = 4,
-	TexImageLayout_Shader_TexImage = 5,
-	TexImageLayout_Transfer_Src = 6,
-	TexImageLayout_Transfer_Dst = 8,
+	TextureStatus_Undefined = 0,
+	TextureStatus_General = 1,
+	TextureStatus_Color_Attachment = 2,
+	TextureStatus_Depth_Stencil_Attachment = 3,
+	TextureStatus_Depth_Stencil_Readonly = 4,
+	TextureStatus_Shader_Read = 5,
+	TextureStatus_Transfer_Src = 6,
+	TextureStatus_Transfer_Dst = 7,
 
-	TexImageLayout_For_Present = 1000001002
+	TextureStatus_Shader_Write = 10,
+	TextureStatus_Resolve_Src  = 11,
+	TextureStatus_Resolve_Dst  = 12,
+
+	TextureStatus_Depth_Attachment = 1000241000,
+	TextureStatus_Depth_ReadOnly = 1000241001,
+	TextureStatus_Stencil_Attachment = 1000241002,
+	TextureStatus_Stencil_ReadOnly = 1000241003,
+	TextureStatus_For_Present = 1000001002
 };
 
 /*
@@ -178,23 +181,27 @@ typedef uint32_t AccessMask;
 /*
  * Pixel format
  */
-enum TexturePixelFormat
+enum RHIFormat
 {
-	TexturePixelFormat_RGB8 = 0,
-	TexturePixelFormat_RGB8_SRGB = 1,
-	TexturePixelFormat_RGB32_FLOAT = 2,
+	RHIFormat_None = 0,
+	RHIFormat_RGB8 = 1,
+	RHIFormat_RGB8_SRGB = 2,
+	RHIFormat_RGB32_FLOAT = 3,
     
-	TexturePixelFormat_RGBA8 = 3,
-	TexturePixelFormat_RGBA8_SRGB = 4,
-	TexturePixelFormat_RGBA32_FLOAT = 5,
+	RHIFormat_RGBA8 = 4,
+	RHIFormat_RGBA8_SRGB = 5,
+	RHIFormat_RGBA32_FLOAT = 6,
     
-	TexturePixelFormat_R32_FLOAT = 6,
-	TexturePixelFormat_D32_FLOAT = 7,
+	RHIFormat_R32_FLOAT = 7,
+	RHIFormat_D32_FLOAT = 8,
 
-	TexturePixelFormat_BGRA8 = 8,
-	TexturePixelFormat_BGRA8_SRGB = 9,
-	TexturePixelFormat_RGBA16_FLOAT = 10,
-	TexturePixelFormat_A2_BGR10_HDR = 11
+	RHIFormat_BGRA8 = 9,
+	RHIFormat_BGRA8_SRGB = 10,
+	RHIFormat_RGBA16_FLOAT = 11,
+	RHIFormat_A2_BGR10_HDR = 12,
+
+	RHIFormat_D32_FLOAT_S8_UINT = 13,
+	RHIFormat_S8_UINT = 14,
 };
 
 /*
@@ -267,7 +274,7 @@ typedef uint32_t ShaderStageType;
  */
 enum DescriptorType
 {
-	DescriptorType_Texture = 0, //Represent texture and sampler
+	DescriptorType_Texture_With_Sampler = 0, 
 	DescriptorType_Storage_Image = 1,
 	DescriptorType_Uniform_Buffer = 2,
 	DescriptorType_Storage_Buffer = 3,
@@ -275,7 +282,7 @@ enum DescriptorType
 	DescriptorType_Storage_Buffer_Dynamic = 5,
 	DescriptorType_Input_Attachment = 6,
 	
-	DescriptorType_Texture_Image = 7,
+	DescriptorType_Texture = 7,
 	DescriptorType_Sampler = 8
 };
 

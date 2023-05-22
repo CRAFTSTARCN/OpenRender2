@@ -37,5 +37,5 @@ public:
      * Vulkan rhi setting
      */
 	//Initial valid
-    bool VKEnableValidationLayer = true;
+    bool VKEnableValidationLayer = false;
 };

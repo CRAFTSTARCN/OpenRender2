@@ -8,15 +8,15 @@
 
 struct AttachmentDescription
 {
-	TexturePixelFormat Format = TexturePixelFormat_RGB8;
+	RHIFormat Format = RHIFormat_RGB8;
 	AttachmentLoadOperation Onload = AttachmentLoadOperation_Nothing;
 	AttachmentStoreOperation OnStore = AttachmentStoreOperation_Nothing;
 
 	AttachmentLoadOperation OnStencilLoad = AttachmentLoadOperation_Nothing;
 	AttachmentStoreOperation OnStencilStore = AttachmentStoreOperation_Nothing;
 
-	TexImageLayout InitialLayout = TexImageLayout_Undefined;
-	TexImageLayout FinalLayout = TexImageLayout_Undefined;
+	TextureStatus InitialLayout = TextureStatus_Undefined;
+	TextureStatus FinalLayout = TextureStatus_Undefined;
 };
 
 struct ClearColorInfo

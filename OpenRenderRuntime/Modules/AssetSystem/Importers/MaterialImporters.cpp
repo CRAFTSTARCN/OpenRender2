@@ -401,7 +401,7 @@ size_t MaterialInstanceImporter::LoadAsset(Json AssetJson, const std::string& Re
 		{
 			if(Val.Ptr == nullptr)
 			{
-				MaterialTextures.emplace_back(std::make_pair(Name, RenderResource::BAD_TEXTURE_ID));
+				MaterialTextures.emplace_back(std::make_pair(Name, RenderTexture::BAD_TEXTURE_ID));
 			}
 			else
 			{

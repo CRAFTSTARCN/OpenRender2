@@ -11,7 +11,7 @@
                     "Type" : "StaticMeshComponent",
                     "Name" : "Mesh",
                     "Parent" : null,
-                    "MaterialOverride": null,
+                    "MaterialOverride": "./Materials/MI_Bunny_1.json",
                     "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 0,
                     "Blocker" : true,
@@ -44,7 +44,7 @@
                     "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 1,
                     "Blocker" : true,
-                    "MaterialOverride" : null,
+                    "MaterialOverride" :"./Materials/MI_Bunny_1.json",
                     "Transform" : null
                 }
             ]
@@ -58,7 +58,7 @@
                     "Type" : "StaticMeshComponent",
                     "Name" : "Mesh",
                     "Parent" : null,
-                    "MaterialOverride": null,
+                    "MaterialOverride": "./Materials/MI_Bunny_2.json",
                     "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 0,
                     "Blocker" : true,
@@ -91,19 +91,100 @@
                     "StaticMesh" : "./Mesh/S_Bunny.json",
                     "PackIndex" : 1,
                     "Blocker" : true,
-                    "MaterialOverride" : null,
+                    "MaterialOverride" : "./Materials/MI_Bunny_2.json",
                     "Transform" : null
                 }
             ]
+        },
+        {
+            "Name" : "Bunny_2",
+            "Scripts" : 
+            [
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "Mesh",
+                    "Parent" : null,
+                    "MaterialOverride": "./Materials/MI_Bunny_3.json",
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
+                    "PackIndex" : 0,
+                    "Blocker" : true,
+                    "Transform" : 
+                    {
+                        "Translate" : 
+                        {
+                            "X" : 100,
+                            "Y" : -10.0,
+                            "Z" : -50
+                        },
+                        "Rotation" : 
+                        {
+                            "X" : -90.0,
+                            "Y" : -45.0,
+                            "Z" : 0.0
+                        },
+                        "Scale" : 
+                        {
+                            "X" : 20.0,
+                            "Y" : 20.0,
+                            "Z" : 20.0
+                        }
+                    }
+                },
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "MeshEye",
+                    "Parent" : 0,
+                    "StaticMesh" : "./Mesh/S_Bunny.json",
+                    "PackIndex" : 1,
+                    "Blocker" : true,
+                    "MaterialOverride" : "./Materials/MI_Bunny_3.json",
+                    "Transform" : null
+                }
+            ]
+        },
+        {
+            "Name" : "Statue",
+            "Scripts" : 
+            [
+                {
+                    "Type" : "StaticMeshComponent",
+                    "Name" : "Mesh",
+                    "Parent" : null,
+                    "MaterialOverride": null,
+                    "StaticMesh" : "./Mesh/S_Statue.json",
+                    "PackIndex" : 0,
+                    "Blocker" : true,
+                    "Transform" : 
+                    {
+                        "Translate" : 
+                        {
+                            "X" : -50,
+                            "Y" : 0.0,
+                            "Z" : -50.0
+                        },
+                        "Rotation" : 
+                        {
+                            "X" : -90,
+                            "Y" : 0,
+                            "Z" : 0.0
+                        },
+                        "Scale" : 
+                        {
+                            "X" : 40.0,
+                            "Y" : 40.0,
+                            "Z" : 40.0
+                        }
+                    }
+                }
+            ]
         }
-
     ],
 
     "Skybox" :  
     {
-        "Skybox" : "./Texture/AnimSky/T_Anim_Skybox.json",
-        "Radiance" : "./Texture/AnimSky/T_Anim_Radiance.json",
-        "Irradiance" : "./Texture/AnimSky/T_Anim_Irradiance.json"
+        "Skybox": "./Texture/Vestibule/T_Vestibule_Skybox.json",
+        "Radiance": "./Texture/Vestibule/T_Vestibule_Radiance.json",
+        "Irradiance": "./Texture/Vestibule/T_Vestibule_Irradiance.json"
     },
 
     "Camera" : 

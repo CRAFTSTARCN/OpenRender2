@@ -4,6 +4,8 @@
 #include <string>
 #include "OpenRenderRuntime/Core/RHI/RHIDescriptor.h"
 #include "OpenRenderRuntime/Core/RHI/RHIPipeline.h"
+#include "OpenRenderRuntime/Util/AutoIncreaseIdAllocator.h"
+
 
 struct MaterialParameterProxyStruct
 {

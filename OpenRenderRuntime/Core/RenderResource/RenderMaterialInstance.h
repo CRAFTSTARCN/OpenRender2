@@ -1,5 +1,6 @@
 #pragma once
 #include "OpenRenderRuntime/Core/RenderResource/RenderMaterialBase.h"
+#include "OpenRenderRuntime/Util/AutoIncreaseIdAllocator.h"
 
 class RenderMaterialInstance
 {

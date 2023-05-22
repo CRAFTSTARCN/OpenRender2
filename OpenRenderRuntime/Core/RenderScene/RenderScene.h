@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vector>
 
+#include "RenderQueue.h"
 #include "OpenRenderRuntime/Core/RenderScene/Lights.h"
 #include "OpenRenderRuntime/Core/RenderScene/RenderableInstance.h"
 #include "OpenRenderRuntime/Core/RenderScene/SceneCamera.h"
@@ -14,8 +15,8 @@ protected:
     
     std::unordered_map<std::size_t, size_t> RenderableIdIndexTable;
     
-    MultiTimeRunable* CullingThreads = nullptr;
-    size_t CullingThreadCount = 0;
+    MultiTimeRunable* SceneThreads = nullptr;
+    size_t SceneThreadCount = 0;
 
     constexpr static float MaxEmptyLoad = 0.33f;
     constexpr static int MaxEmptyNum = 128;
@@ -35,10 +36,8 @@ public:
 	glm::vec3 AmbientLight {};
     
     std::vector<RenderableInstance> Instances;
-    
-    DefaultMaterialBasedQueue PreRenderedOpaquedQueue {};
-    DefaultMaterialBasedQueue PostRenderedOpaquedQueue {};
-    
+	std::unordered_map<std::string, RenderQueue*> Queues;
+	
     virtual ~RenderScene();
     
     virtual void Initialize();
@@ -65,5 +64,18 @@ public:
      * HasInstance function will check if a instance in scene
      */
     virtual void TryAddInstance(const RenderableInstance& Instance);
-    
+
+	virtual void RegisterQueue(const std::string& Name, RenderQueue* RegisteredQueue);
+	
+	template<typename FT, typename... ArgT>
+	void RunSceneTask(int ThreadIndex, FT&& Func, ArgT&& ...Args)
+	{
+		if(ThreadIndex <= SceneThreadCount || ThreadIndex < 0)
+		{
+			LOG_ERROR_FUNCTION("{0} out of scene thread index", ThreadIndex);
+			return;
+		}
+
+		SceneThreads[ThreadIndex].Run(std::forward<FT&&>(Func), std::forward<ArgT&&>(Args)...);
+	}
 };

@@ -122,8 +122,16 @@ if __name__ == "__main__":
     
     shader_path = sys.argv[1]
     mat_path = None
-    if(argc > 2):
-        mat_path = sys.argv[2]
+
+    Index = 2
+    while Index < argc:
+        if sys.argv[Index] == "-M" and Index < argc - 1:
+            mat_path = sys.argv[Index + 1]
+            Index += 1
+            
+            pass
+
+        pass
 
     compile_shader(shader_path, mat_path)
     

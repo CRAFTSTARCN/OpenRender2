@@ -8,7 +8,7 @@ add_library(${TARGET_NAME} ${HEADER_FILE_RT} ${HEADER_PLUS_FILE_RT} ${SOURCE_FIL
 
 target_include_directories(${TARGET_NAME} PUBLIC ${ROOT_DIR})
 
-set_target_properties(OpenRenderRuntime PROPERTIES FOLDER ${RENDER_FOLDER_NAME})
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER ${RENDER_FOLDER_NAME})
 
 target_compile_options(${TARGET_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 target_compile_options(${TARGET_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/WX->")

@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	}
 
 	MeshletSerializer Serializer;
-	Serializer.SerializeMeshlet(MeshletGroups, (ExeDir / "Bunny.mlt").generic_string());
+	Serializer.SerializeMeshlet(MeshletGroups, (ExeDir / "Content/Mesh/Bunny/Bunny.mlt").generic_string());
 	
 	return 0;
 }

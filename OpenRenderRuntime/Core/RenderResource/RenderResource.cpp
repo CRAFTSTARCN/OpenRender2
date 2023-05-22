@@ -11,8 +11,7 @@ void RenderResource::Initialize(RHI* InRHI)
 	GlobalBufferSize = RenderConfig::Get().GlobalDCBufferSize;
 	GlobalBuffer = RHIPtr->CreateStorageBuffer(
 		GlobalBufferSize,
-		BufferMemoryUsage_Host_Coherent,
-		false);
+		BufferMemoryUsage_Host_Coherent);
 
 	if(!GlobalBuffer)
 	{
@@ -72,7 +71,8 @@ void RenderResource::ClearResource()
 
 	for(auto [Id, Texture] : Textures)
 	{
-		RHIPtr->DestroyTexture(Texture);
+		RHIPtr->DestroyTexture(Texture->InternalTexture);
+		RHIPtr->DestroySampler(Texture->Sampler);
 	}
 
 	Meshes.clear();
@@ -87,14 +87,14 @@ void RenderResource::Terminate()
 	/*
 	 * Destroy attachments
 	 */
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferA);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferB);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferC);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferD);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferE);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferA);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferB);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferC);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferD);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferE);
 
 
-	RHIPtr->DestroyRenderAttachment(DepthStencilAttachment);
+	RHIPtr->DestroyTexture(DepthStencilAttachment);
 
 	/*
 	 * Destroy buffer
@@ -112,13 +112,15 @@ void RenderResource::OnCreateGlobalRenderDataBuffer()
 
 void RenderResource::OnCreateDepthBuffer(uint32_t Width, uint32_t Height)
 {
-	DepthStencilAttachment = RHIPtr->CreateRenderAttachment(
+	TextureInfo DepthBufferInfo = {
 		Width,
 		Height,
-		TexturePixelFormat_D32_FLOAT,
-		RenderImageAttachmentType_Depth_Attachment,
-		ImageExtraUsageBit_Transfer_Src,1,1,
-		true);
+		RHIFormat_D32_FLOAT,
+		TextureType_2D,
+		TextureUsageBit_DepthStencil | TextureUsageBit_InputAttachment | TextureUsageBit_Sample,
+		1,
+		1};
+	DepthStencilAttachment = RHIPtr->CreateTexture2D(DepthBufferInfo);
 
 	if(!DepthStencilAttachment)
 	{
@@ -128,36 +130,19 @@ void RenderResource::OnCreateDepthBuffer(uint32_t Width, uint32_t Height)
 
 void RenderResource::OnCreateGBuffer(uint32_t Width, uint32_t Height)
 {
-	GlobalGBuffer.GBufferA = RHIPtr->CreateRenderAttachment(
+	TextureInfo GBufferInfo = {
 		Width,
 		Height,
-		TexturePixelFormat_RGBA8,
-		RenderImageAttachmentType_Color_Attachment,
-		0);
-	GlobalGBuffer.GBufferB = RHIPtr->CreateRenderAttachment(
-		Width,
-		Height,
-		TexturePixelFormat_RGBA8,
-		RenderImageAttachmentType_Color_Attachment,
-		0);
-	GlobalGBuffer.GBufferC = RHIPtr->CreateRenderAttachment(
-		Width,
-		Height,
-		TexturePixelFormat_RGBA8,
-		RenderImageAttachmentType_Color_Attachment,
-		0);
-	GlobalGBuffer.GBufferD = RHIPtr->CreateRenderAttachment(
-		Width,
-		Height,
-		TexturePixelFormat_RGBA8,
-		RenderImageAttachmentType_Color_Attachment,
-		0);
-	GlobalGBuffer.GBufferE = RHIPtr->CreateRenderAttachment(
-		Width,
-		Height,
-		TexturePixelFormat_RGBA8,
-		RenderImageAttachmentType_Color_Attachment,
-		0);
+		RHIFormat_RGBA8,
+		TextureType_2D,
+		TextureUsageBit_ColorAttachment | TextureUsageBit_InputAttachment | TextureUsageBit_Sample,
+		1,
+		1};
+	GlobalGBuffer.GBufferA = RHIPtr->CreateTexture2D(GBufferInfo);
+	GlobalGBuffer.GBufferB = RHIPtr->CreateTexture2D(GBufferInfo);
+	GlobalGBuffer.GBufferC = RHIPtr->CreateTexture2D(GBufferInfo);
+	GlobalGBuffer.GBufferD = RHIPtr->CreateTexture2D(GBufferInfo);
+	GlobalGBuffer.GBufferE = RHIPtr->CreateTexture2D(GBufferInfo);
 
 	if(!GlobalGBuffer.GBufferA || !GlobalGBuffer.GBufferB || !GlobalGBuffer.GBufferC || !GlobalGBuffer.GBufferD || !GlobalGBuffer.GBufferE)
 	{
@@ -168,14 +153,14 @@ void RenderResource::OnCreateGBuffer(uint32_t Width, uint32_t Height)
 
 void RenderResource::OnResize(uint32_t Width, uint32_t Height)
 {
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferA);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferB);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferC);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferD);
-	RHIPtr->DestroyRenderAttachment(GlobalGBuffer.GBufferE);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferA);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferB);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferC);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferD);
+	RHIPtr->DestroyTexture(GlobalGBuffer.GBufferE);
 
 
-	RHIPtr->DestroyRenderAttachment(DepthStencilAttachment);
+	RHIPtr->DestroyTexture(DepthStencilAttachment);
 	
 	OnCreateDepthBuffer(Width, Height);
 	OnCreateGBuffer(Width, Height);

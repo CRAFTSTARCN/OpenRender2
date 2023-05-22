@@ -4,19 +4,18 @@
 
 #include <cassert>
 
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHIRenderImageAttachment.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImage.h"
-#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITexImageView.h"
+#include "VulkanRHITexture.h"
+#include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHITextureView.h"
 
 #define COMPILE_VULKAN_VERSION VK_API_VERSION_1_3
-#define DESCRIPTOR_POOL_SIZE 5
+#define DESCRIPTOR_POOL_SIZE 7
 
 void VulkanRHI::InitializeVulkan()
 {
     CreateVulkanInstance();
     LoadExtensionFunctions();
 
-    if(VulkanContext->EnableDebug)
+    if(Context->EnableDebug)
     {
         SetupMessengerUtil();
     }
@@ -51,7 +50,7 @@ void VulkanRHI::CreateVulkanInstance()
     VkResult EnumResult;
     std::vector<const char*> PlatformExtensionRequirements;
     
-    if(VulkanContext->EnableDebug)
+    if(Context->EnableDebug)
     {
         VkDebugUtilsMessengerCreateInfoEXT DebugCreateInfo{};
 
@@ -107,7 +106,7 @@ void VulkanRHI::CreateVulkanInstance()
     VulkanInstanceInfo.ppEnabledExtensionNames = PlatformExtensionRequirements.data();
 
     LOG_DEBUG_FUNCTION("Creating vulkan instance");
-    VkResult CreateInstanceResult = vkCreateInstance(&VulkanInstanceInfo, nullptr, &VulkanContext->Instance);
+    VkResult CreateInstanceResult = vkCreateInstance(&VulkanInstanceInfo, nullptr, &Context->Instance);
     assert(CreateInstanceResult == VK_SUCCESS);
 }
 
@@ -115,11 +114,11 @@ void VulkanRHI::LoadExtensionFunctions()
 {
     VulkanEXT.VKCreateDebugUtilsMessengerEXT =
         VKTool::LoadFunction<PFN_vkCreateDebugUtilsMessengerEXT>(
-            VulkanContext,
+            Context,
             "vkCreateDebugUtilsMessengerEXT");
     VulkanEXT.VKDstroyDebugUtilsMessengerEXT =
         VKTool::LoadFunction<PFN_vkDestroyDebugUtilsMessengerEXT>(
-            VulkanContext,
+            Context,
             "vkDestroyDebugUtilsMessengerEXT");
 }
 
@@ -138,10 +137,10 @@ void VulkanRHI::SetupMessengerUtil()
     LOG_DEBUG_FUNCTION("Debug enabled, create messenger");
     
     VkResult CreateResult = VulkanEXT.VKCreateDebugUtilsMessengerEXT(
-        VulkanContext->Instance,
+        Context->Instance,
         &DebugCreateInfo,
         nullptr,
-        &VulkanContext->DebugMessenger);
+        &Context->DebugMessenger);
 
     assert(CreateResult == VK_SUCCESS);
 }
@@ -149,20 +148,20 @@ void VulkanRHI::SetupMessengerUtil()
 void VulkanRHI::CreateWindowSurface()
 {
     LOG_DEBUG_FUNCTION("Creating window surface");
-    VkResult CreateResult = glfwCreateWindowSurface(VulkanContext->Instance, WindowPtr, nullptr, &VulkanContext->WindowSurface);
+    VkResult CreateResult = glfwCreateWindowSurface(Context->Instance, WindowPtr, nullptr, &Context->WindowSurface);
     assert(CreateResult == VK_SUCCESS);
 }
 
 void VulkanRHI::PickPhysicalDevice()
 {
     LOG_DEBUG_FUNCTION("Start picking physical device");
-    std::vector<std::pair<size_t, VkPhysicalDevice>> RankedDevices = VKTool::GetRankedGPU(VulkanContext);
+    std::vector<std::pair<size_t, VkPhysicalDevice>> RankedDevices = VKTool::GetRankedGPU(Context);
 
     auto TestGPU = [&](VkPhysicalDevice PhysicalDevice) -> bool
     {
         int GraphicsQueueIndex = VKTool::FindQueueFamilyByBit(PhysicalDevice, VK_QUEUE_GRAPHICS_BIT);
         int ComputeQueueIndex = VKTool::FindQueueFamilyByBit(PhysicalDevice, VK_QUEUE_COMPUTE_BIT);
-        int PresentQueueIndex = VKTool::FindPresentQueueFamily(PhysicalDevice, VulkanContext);
+        int PresentQueueIndex = VKTool::FindPresentQueueFamily(PhysicalDevice, Context);
 
         if(GraphicsQueueIndex == -1 || PresentQueueIndex == -1)
         {
@@ -190,11 +189,11 @@ void VulkanRHI::PickPhysicalDevice()
 
         std::vector<VkSurfaceFormatKHR> Formats = VKTool::GetPropertiesArray2P<VkSurfaceFormatKHR>(
             PhysicalDevice,
-            VulkanContext->WindowSurface,
+            Context->WindowSurface,
             vkGetPhysicalDeviceSurfaceFormatsKHR);
         std::vector<VkPresentModeKHR> PresentModes = VKTool::GetPropertiesArray2P<VkPresentModeKHR>(
             PhysicalDevice,
-            VulkanContext->WindowSurface,
+            Context->WindowSurface,
             vkGetPhysicalDeviceSurfacePresentModesKHR);
 
         if(Formats.empty() || PresentModes.empty())
@@ -202,11 +201,11 @@ void VulkanRHI::PickPhysicalDevice()
             return false;
         }
 
-        VulkanContext->SurfaceFormats = std::move(Formats);
-        VulkanContext->PresentMods = std::move(PresentModes);
-        VulkanContext->GraphicsQueueFamilyIndex = GraphicsQueueIndex;
-        VulkanContext->PresentQueueFamilyIndex = PresentQueueIndex;
-        VulkanContext->ComputeQueueFamilyIndex = ComputeQueueIndex;
+        Context->SurfaceFormats = std::move(Formats);
+        Context->PresentMods = std::move(PresentModes);
+        Context->GraphicsQueueFamilyIndex = GraphicsQueueIndex;
+        Context->PresentQueueFamilyIndex = PresentQueueIndex;
+        Context->ComputeQueueFamilyIndex = ComputeQueueIndex;
 
         return true;
     };
@@ -220,12 +219,12 @@ void VulkanRHI::PickPhysicalDevice()
 
         if(TestGPU(GPUPair.second))
         {
-            VulkanContext->PhysicalDevice = GPUPair.second;
+            Context->PhysicalDevice = GPUPair.second;
         }
     }
 
     
-    assert(VulkanContext->PhysicalDevice);
+    assert(Context->PhysicalDevice);
     
 }
 
@@ -240,14 +239,14 @@ void VulkanRHI::CreateLogicalDevice()
     int Total = 3;
     
     std::unordered_map<int, int> QueueIndexMap;
-    int GraphicsQueueIndexStart = QueueIndexMap[VulkanContext->GraphicsQueueFamilyIndex];
-    QueueIndexMap[VulkanContext->GraphicsQueueFamilyIndex] += 1;
+    int GraphicsQueueIndexStart = QueueIndexMap[Context->GraphicsQueueFamilyIndex];
+    QueueIndexMap[Context->GraphicsQueueFamilyIndex] += 1;
     
-    int PresentQueueIndex = QueueIndexMap[VulkanContext->PresentQueueFamilyIndex];
-    QueueIndexMap[VulkanContext->PresentQueueFamilyIndex] += 1;
+    int PresentQueueIndex = QueueIndexMap[Context->PresentQueueFamilyIndex];
+    QueueIndexMap[Context->PresentQueueFamilyIndex] += 1;
 
-    int ComputeQueueIndex = QueueIndexMap[VulkanContext->ComputeQueueFamilyIndex];
-    QueueIndexMap[VulkanContext->ComputeQueueFamilyIndex] += 1;
+    int ComputeQueueIndex = QueueIndexMap[Context->ComputeQueueFamilyIndex];
+    QueueIndexMap[Context->ComputeQueueFamilyIndex] += 1;
 
     std::vector<VkDeviceQueueCreateInfo> QueueInfos;
     std::vector<float> Priorities(Total, 1.0f);
@@ -301,37 +300,38 @@ void VulkanRHI::CreateLogicalDevice()
     Features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     Features12.shaderInt8 = VK_TRUE;
     Features12.storageBuffer8BitAccess = VK_TRUE;
+    Features12.descriptorIndexing = VK_TRUE;
     MeshShaderFeatureEnable.pNext = &Features12;
     
-    VkResult CreateResult = vkCreateDevice(VulkanContext->PhysicalDevice, &DeviceInfo, nullptr, &VulkanContext->Device);
+    VkResult CreateResult = vkCreateDevice(Context->PhysicalDevice, &DeviceInfo, nullptr, &Context->Device);
     assert(CreateResult == VK_SUCCESS);
     
 
     vkGetDeviceQueue(
-        VulkanContext->Device,
-        VulkanContext->GraphicsQueueFamilyIndex,
+        Context->Device,
+        Context->GraphicsQueueFamilyIndex,
         GraphicsQueueIndexStart,
-        &VulkanContext->GraphicsQueue);
-    assert(VulkanContext->GraphicsQueue);
+        &Context->GraphicsQueue);
+    assert(Context->GraphicsQueue);
     
     vkGetDeviceQueue(
-        VulkanContext->Device,
-        VulkanContext->PresentQueueFamilyIndex,
+        Context->Device,
+        Context->PresentQueueFamilyIndex,
         PresentQueueIndex,
-        &VulkanContext->PresentQueue);
-    assert(VulkanContext->PresentQueue);
+        &Context->PresentQueue);
+    assert(Context->PresentQueue);
 
     vkGetDeviceQueue(
-        VulkanContext->Device,
-        VulkanContext->ComputeQueueFamilyIndex,
+        Context->Device,
+        Context->ComputeQueueFamilyIndex,
         ComputeQueueIndex,
-        &VulkanContext->ComputeQueue);
-    assert(VulkanContext->ComputeQueue);
+        &Context->ComputeQueue);
+    assert(Context->ComputeQueue);
 }
 
 void VulkanRHI::LoadDeviceExtensionFunctions()
 {
-    VulkanEXT.VKCmdDrawMeshTaskEXT = VKTool::LoadDeviceFunction<PFN_vkCmdDrawMeshTasksEXT>(VulkanContext, "vkCmdDrawMeshTasksEXT");
+    VulkanEXT.VKCmdDrawMeshTaskEXT = VKTool::LoadDeviceFunction<PFN_vkCmdDrawMeshTasksEXT>(Context, "vkCmdDrawMeshTasksEXT");
 }
 
 void VulkanRHI::CreateSwapchain()
@@ -339,9 +339,9 @@ void VulkanRHI::CreateSwapchain()
     LOG_DEBUG_FUNCTION("Creating Swapchian");
     
     VkSurfaceCapabilitiesKHR SurfaceCapabilities {};
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanContext->PhysicalDevice, VulkanContext->WindowSurface, &SurfaceCapabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Context->PhysicalDevice, Context->WindowSurface, &SurfaceCapabilities);
     int SwapchainFormatIndex = 0;
-    std::vector<VkSurfaceFormatKHR>& DeviceFormats = VulkanContext->SurfaceFormats;
+    std::vector<VkSurfaceFormatKHR>& DeviceFormats = Context->SurfaceFormats;
     for(size_t i = 0; i < DeviceFormats.size(); ++i)
     {
         if(DeviceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB && DeviceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -352,7 +352,7 @@ void VulkanRHI::CreateSwapchain()
     }
 
     VkPresentModeKHR PresentMode = VK_PRESENT_MODE_FIFO_KHR;
-    for (const auto& Present : VulkanContext->PresentMods) {
+    for (const auto& Present : Context->PresentMods) {
         if(Present == VK_PRESENT_MODE_MAILBOX_KHR) {
             PresentMode = Present;
             break;
@@ -371,17 +371,17 @@ void VulkanRHI::CreateSwapchain()
 
     VkSwapchainCreateInfoKHR SwapchainInfo {};
     SwapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    SwapchainInfo.surface = VulkanContext->WindowSurface;
+    SwapchainInfo.surface = Context->WindowSurface;
 
     SwapchainInfo.minImageCount = ImageCount;
-    SwapchainInfo.imageFormat = VulkanContext->SurfaceFormats.at(SwapchainFormatIndex).format;
-    SwapchainInfo.imageColorSpace = VulkanContext->SurfaceFormats.at(SwapchainFormatIndex).colorSpace;
+    SwapchainInfo.imageFormat = Context->SurfaceFormats.at(SwapchainFormatIndex).format;
+    SwapchainInfo.imageColorSpace = Context->SurfaceFormats.at(SwapchainFormatIndex).colorSpace;
     SwapchainInfo.imageExtent = Extend;
     SwapchainInfo.imageArrayLayers = 1;
     SwapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    uint32_t QueueFamilies[] = {(uint32_t)VulkanContext->PresentQueueFamilyIndex, (uint32_t)VulkanContext->GraphicsQueueFamilyIndex};
-    if(VulkanContext->PresentQueueFamilyIndex != VulkanContext->GraphicsQueueFamilyIndex)
+    uint32_t QueueFamilies[] = {(uint32_t)Context->PresentQueueFamilyIndex, (uint32_t)Context->GraphicsQueueFamilyIndex};
+    if(Context->PresentQueueFamilyIndex != Context->GraphicsQueueFamilyIndex)
     {
         SwapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         SwapchainInfo.queueFamilyIndexCount = 2;
@@ -398,51 +398,57 @@ void VulkanRHI::CreateSwapchain()
     SwapchainInfo.clipped = VK_TRUE;
     SwapchainInfo.oldSwapchain = VK_NULL_HANDLE;
 
-    VkResult Result = vkCreateSwapchainKHR(VulkanContext->Device, &SwapchainInfo, nullptr, &VulkanContext->Swapchain);
+    VkResult Result = vkCreateSwapchainKHR(Context->Device, &SwapchainInfo, nullptr, &Context->Swapchain);
     assert(Result == VK_SUCCESS);
 
-    VulkanContext->Format = VulkanContext->SurfaceFormats.at(SwapchainFormatIndex).format;
-    VulkanContext->Extend = Extend;
-    VulkanContext->SwapchainImages = VKTool::GetPropertiesArray2P<VkImage>(VulkanContext->Device, VulkanContext->Swapchain, vkGetSwapchainImagesKHR);
-    VulkanContext->DefaultScissor = {{0,0}, Extend};
-    VulkanContext->DefaultViewport = {0.0,0.0,(float)Extend.width, -(float)Extend.height, 0.0f, 1.0f};
+    Context->Format = Context->SurfaceFormats.at(SwapchainFormatIndex).format;
+    Context->Extend = Extend;
+    Context->SwapchainImages = VKTool::GetPropertiesArray2P<VkImage>(Context->Device, Context->Swapchain, vkGetSwapchainImagesKHR);
+    Context->DefaultScissor = {{0,0}, Extend};
+    Context->DefaultViewport = {0.0,0.0,(float)Extend.width, -(float)Extend.height, 0.0f, 1.0f};
 }
 
 void VulkanRHI::CreateSwapchainImageView()
 {
     LOG_DEBUG_FUNCTION("Creating image views");
     
-    VulkanContext->ImageViews.resize(VulkanContext->SwapchainImages.size());
-    for(size_t i=0; i<VulkanContext->SwapchainImages.size(); ++i)
+    Context->ImageViews.resize(Context->SwapchainImages.size());
+    for(size_t i=0; i<Context->SwapchainImages.size(); ++i)
     {
-        VulkanContext->ImageViews[i] = VKTool::CreateImageView(
-            VulkanContext,
-            VulkanContext->SwapchainImages[i],
-            VulkanContext->Format,
+        Context->ImageViews[i] = VKTool::CreateImageView(
+            Context,
+            Context->SwapchainImages[i],
+            Context->Format,
             VK_IMAGE_ASPECT_COLOR_BIT,
             VK_IMAGE_VIEW_TYPE_2D,
             1,
             1);
-        assert(VulkanContext->ImageViews[i]);
+        assert(Context->ImageViews[i]);
     }
 }
 
 void VulkanRHI::CreateDefaultAttachments()
 {
-    DefaultAttachments.resize(VulkanContext->SwapchainImages.size(), nullptr);
-    for(size_t i=0; i<VulkanContext->SwapchainImages.size(); ++i)
+    DefaultAttachments.resize(Context->SwapchainImages.size(), nullptr);
+    for(size_t i=0; i<Context->SwapchainImages.size(); ++i)
     {
-        DefaultAttachments[i] = new VulkanRHIRenderImageAttachment{};
-        DefaultAttachments[i]->AttachmentType = RenderImageAttachmentType_SwapChain;
-        DefaultAttachments[i]->AttachmentImage = new VulkanRHITexImage
-        {
-            {VulkanContext->Extend.width, VulkanContext->Extend.height, 1, 1},
-            VulkanContext->SwapchainImages[i], nullptr
+        DefaultAttachments[i] = new VulkanRHITexture{
+            {
+                {
+                    Context->Extend.width,
+                    Context->Extend.height,
+                    GetSwapchainTextureFormat(),
+                    TextureType_2D,
+                    TextureUsageBit_ColorAttachment,
+                    1,
+                    1
+                }},
+            Context->SwapchainImages[i], nullptr
         };
-        DefaultAttachments[i]->DefaultView = new VulkanRHITexImageView
+        DefaultAttachments[i]->DefaultTextureView = new VulkanRHITextureView
         {
-            {DefaultAttachments[i]->AttachmentImage},
-            VulkanContext->ImageViews[i]
+            {DefaultAttachments[i], GetSwapchainTextureFormat()},
+            Context->ImageViews[i]
         };
     }
 }
@@ -456,39 +462,49 @@ void VulkanRHI::CreateVmaAllocator()
 
     VmaAllocatorCreateInfo AllocatorCreateInfo = {};
     AllocatorCreateInfo.vulkanApiVersion       = COMPILE_VULKAN_VERSION;
-    AllocatorCreateInfo.physicalDevice         = VulkanContext->PhysicalDevice;
-    AllocatorCreateInfo.device                 = VulkanContext->Device;
-    AllocatorCreateInfo.instance               = VulkanContext->Instance;
+    AllocatorCreateInfo.physicalDevice         = Context->PhysicalDevice;
+    AllocatorCreateInfo.device                 = Context->Device;
+    AllocatorCreateInfo.instance               = Context->Instance;
     AllocatorCreateInfo.pVulkanFunctions       = &VulkanFunctions;
-    vmaCreateAllocator(&AllocatorCreateInfo, &VulkanContext->Allocator);
+    vmaCreateAllocator(&AllocatorCreateInfo, &Context->Allocator);
 }
 
 void VulkanRHI::CreateCommandPool()
 {
     LOG_DEBUG_FUNCTION("Creating command pool");
+
+    Context->DrawCommandPool.resize(10);
+    Context->ComputeCommandPool.resize(10);
     
     VkCommandPoolCreateInfo DrawCommandPoolCreateInfo {};
     DrawCommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     DrawCommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    DrawCommandPoolCreateInfo.queueFamilyIndex = VulkanContext->GraphicsQueueFamilyIndex;
-
-    VkResult PoolCreateResult = vkCreateCommandPool(VulkanContext->Device, &DrawCommandPoolCreateInfo, nullptr, &VulkanContext->DrawCommandPool);
-    assert(PoolCreateResult == VK_SUCCESS);
+    DrawCommandPoolCreateInfo.queueFamilyIndex = Context->GraphicsQueueFamilyIndex;
+    
+    VkResult PoolCreateResult;
+    for(int i = 0; i < 10; ++i)
+    {
+        PoolCreateResult = vkCreateCommandPool(Context->Device, &DrawCommandPoolCreateInfo, nullptr, &Context->DrawCommandPool[i]);
+        assert(PoolCreateResult == VK_SUCCESS);
+    }
 
 
     VkCommandPoolCreateInfo ComputeCommandPoolCreateInfo {};
     ComputeCommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     ComputeCommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    ComputeCommandPoolCreateInfo.queueFamilyIndex = VulkanContext->ComputeQueueFamilyIndex;
+    ComputeCommandPoolCreateInfo.queueFamilyIndex = Context->ComputeQueueFamilyIndex;
 
-    PoolCreateResult = vkCreateCommandPool(VulkanContext->Device, &ComputeCommandPoolCreateInfo, nullptr, &VulkanContext->ComputeCommandPool);
-    assert(PoolCreateResult == VK_SUCCESS);
+    for(int i = 0; i < 10; ++i)
+    {
+        PoolCreateResult = vkCreateCommandPool(Context->Device, &ComputeCommandPoolCreateInfo, nullptr, &Context->ComputeCommandPool[i]);
+        assert(PoolCreateResult == VK_SUCCESS);
+    }
 
     VkCommandPoolCreateInfo SingleTimeCommandPoolCreateInfo {};
     SingleTimeCommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     SingleTimeCommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-    SingleTimeCommandPoolCreateInfo.queueFamilyIndex = VulkanContext->GraphicsQueueFamilyIndex;
-    PoolCreateResult = vkCreateCommandPool(VulkanContext->Device, &SingleTimeCommandPoolCreateInfo, nullptr, &VulkanContext->SingleTimeCommandPool);
+    SingleTimeCommandPoolCreateInfo.queueFamilyIndex = Context->GraphicsQueueFamilyIndex;
+    PoolCreateResult = vkCreateCommandPool(Context->Device, &SingleTimeCommandPoolCreateInfo, nullptr, &Context->SingleTimeCommandPool);
     assert(PoolCreateResult == VK_SUCCESS);
     
 }
@@ -497,35 +513,42 @@ void VulkanRHI::CreateCommandBuffers()
 {
     LOG_DEBUG_FUNCTION("Creating command buffers");
 
-    uint32_t DrawCmdBufferCount = 2u * 2u;
-    VulkanContext->DrawCommandBuffers.resize(DrawCmdBufferCount);
+    uint32_t DrawCmdBufferCount = 10;
+    Context->DrawCommandBuffers.resize(DrawCmdBufferCount);
     
     VkCommandBufferAllocateInfo CommandBufferInfo {};
     CommandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     CommandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    CommandBufferInfo.commandPool = VulkanContext->DrawCommandPool;
-    CommandBufferInfo.commandBufferCount = DrawCmdBufferCount;
+    CommandBufferInfo.commandBufferCount = 1;
 
-    VkResult Result = vkAllocateCommandBuffers(VulkanContext->Device, &CommandBufferInfo, VulkanContext->DrawCommandBuffers.data());
-    assert(Result == VK_SUCCESS);
+    VkResult Result;
+    for(int i = 0; i < 10; ++i)
+    {
+        CommandBufferInfo.commandPool = Context->DrawCommandPool[i]; 
+        Result = vkAllocateCommandBuffers(Context->Device, &CommandBufferInfo, &Context->DrawCommandBuffers[i]);
+        assert(Result == VK_SUCCESS);
+    }
 
     for(int i=0; i<(int)DrawCmdBufferCount; ++i)
     {
         DrawCommandsStatus.FreeQueue.push(i);
     }
 
-    uint32_t ComputeCmdBufferCount = 2u * 2u;
-    VulkanContext->ComputeCommandBuffers.resize(ComputeCmdBufferCount);
+    uint32_t ComputeCmdBufferCount = 10;
+    Context->ComputeCommandBuffers.resize(ComputeCmdBufferCount);
     
     VkCommandBufferAllocateInfo ComputeCommandBufferInfo {};
     ComputeCommandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     ComputeCommandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    ComputeCommandBufferInfo.commandPool = VulkanContext->ComputeCommandPool;
-    ComputeCommandBufferInfo.commandBufferCount = ComputeCmdBufferCount;
-    
-    Result = vkAllocateCommandBuffers(VulkanContext->Device, &ComputeCommandBufferInfo, VulkanContext->ComputeCommandBuffers.data());
-    assert(Result == VK_SUCCESS);
+    ComputeCommandBufferInfo.commandBufferCount = 1;
 
+    for(int i = 0; i < 10; ++i)
+    {
+        ComputeCommandBufferInfo.commandPool = Context->ComputeCommandPool[i]; 
+        Result = vkAllocateCommandBuffers(Context->Device, &ComputeCommandBufferInfo, &Context->ComputeCommandBuffers[i]);
+        assert(Result == VK_SUCCESS);
+    }
+    
     for(int i=0; i<(int)ComputeCmdBufferCount; ++i)
     {
         ComputeCommandsStatus.FreeQueue.push(i);
@@ -541,17 +564,17 @@ void VulkanRHI::CreateSyncPrimitives()
     SemaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     
     VkResult Result = vkCreateSemaphore(
-        VulkanContext->Device,
+        Context->Device,
         &SemaphoreInfo,
         nullptr,
-        &VulkanContext->ImageRequireSemaphore);
+        &Context->ImageRequireSemaphore);
     assert(Result == VK_SUCCESS);
 
     Result = vkCreateSemaphore(
-        VulkanContext->Device,
+        Context->Device,
         &SemaphoreInfo,
         nullptr,
-        &VulkanContext->PresentSemaphore);
+        &Context->PresentSemaphore);
     assert(Result == VK_SUCCESS);
     
 }
@@ -573,6 +596,10 @@ void VulkanRHI::CreateDescriptorPool()
     PoolSize[3].descriptorCount = 4096; 
     PoolSize[4].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
     PoolSize[4].descriptorCount = 32;
+    PoolSize[5].type            = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+    PoolSize[5].descriptorCount = 1024;
+    PoolSize[6].type            = VK_DESCRIPTOR_TYPE_SAMPLER;
+    PoolSize[6].descriptorCount = 1024;
 
     VkDescriptorPoolCreateInfo PoolInfo {};
     PoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -581,7 +608,7 @@ void VulkanRHI::CreateDescriptorPool()
     PoolInfo.maxSets = 2048 + 128;
     PoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
-    VkResult Result = vkCreateDescriptorPool(VulkanContext->Device, &PoolInfo, nullptr, &VulkanContext->DescriptorPool);
+    VkResult Result = vkCreateDescriptorPool(Context->Device, &PoolInfo, nullptr, &Context->DescriptorPool);
     assert(Result == VK_SUCCESS);
 }
 
@@ -594,7 +621,7 @@ void VulkanRHI::RecreateSwapChain()
         glfwWaitEvents();
     }
     
-    vkDeviceWaitIdle(VulkanContext->Device);
+    vkDeviceWaitIdle(Context->Device);
     
     DestroySwapchainObjects();
     
@@ -607,38 +634,41 @@ void VulkanRHI::DestroySwapchainObjects()
 {
     for(auto Attachment : DefaultAttachments)
     {
-        delete Attachment->DefaultView;
-        delete Attachment->AttachmentImage;
+        delete Attachment->DefaultTextureView;
         delete Attachment;
     }
 
-    for(auto SwapchainImageView : VulkanContext->ImageViews)
+    for(auto SwapchainImageView : Context->ImageViews)
     {
-        vkDestroyImageView(VulkanContext->Device, SwapchainImageView, nullptr);
+        vkDestroyImageView(Context->Device, SwapchainImageView, nullptr);
     }
 
-    vkDestroySwapchainKHR(VulkanContext->Device, VulkanContext->Swapchain, nullptr);
+    vkDestroySwapchainKHR(Context->Device, Context->Swapchain, nullptr);
 }
 
 void VulkanRHI::DestroyVulkanObjects()
 {
     DestroySwapchainObjects();
 
-    vkDestroySemaphore(VulkanContext->Device, VulkanContext->ImageRequireSemaphore, nullptr);
-    vkDestroySemaphore(VulkanContext->Device, VulkanContext->PresentSemaphore, nullptr);
+    vkDestroySemaphore(Context->Device, Context->ImageRequireSemaphore, nullptr);
+    vkDestroySemaphore(Context->Device, Context->PresentSemaphore, nullptr);
     
-    vkDestroyDescriptorPool(VulkanContext->Device, VulkanContext->DescriptorPool, nullptr);
-    vkDestroyCommandPool(VulkanContext->Device, VulkanContext->DrawCommandPool, nullptr);
-    vkDestroyCommandPool(VulkanContext->Device, VulkanContext->ComputeCommandPool, nullptr);
-    vkDestroyCommandPool(VulkanContext->Device, VulkanContext->SingleTimeCommandPool, nullptr);
-    vmaDestroyAllocator(VulkanContext->Allocator);
-    vkDestroyDevice(VulkanContext->Device, nullptr);
-    vkDestroySurfaceKHR(VulkanContext->Instance, VulkanContext->WindowSurface, nullptr);
-    if(VulkanContext->EnableDebug)
+    vkDestroyDescriptorPool(Context->Device, Context->DescriptorPool, nullptr);
+    for(int i = 0; i < 10; ++i)
     {
-        VulkanEXT.VKDstroyDebugUtilsMessengerEXT(VulkanContext->Instance, VulkanContext->DebugMessenger, nullptr);
+        vkDestroyCommandPool(Context->Device, Context->DrawCommandPool[i], nullptr);
+        vkDestroyCommandPool(Context->Device, Context->ComputeCommandPool[i], nullptr);
     }
-    vkDestroyInstance(VulkanContext->Instance, nullptr);
+    
+    vkDestroyCommandPool(Context->Device, Context->SingleTimeCommandPool, nullptr);
+    vmaDestroyAllocator(Context->Allocator);
+    vkDestroyDevice(Context->Device, nullptr);
+    vkDestroySurfaceKHR(Context->Instance, Context->WindowSurface, nullptr);
+    if(Context->EnableDebug)
+    {
+        VulkanEXT.VKDstroyDebugUtilsMessengerEXT(Context->Instance, Context->DebugMessenger, nullptr);
+    }
+    vkDestroyInstance(Context->Instance, nullptr);
 }
 
 

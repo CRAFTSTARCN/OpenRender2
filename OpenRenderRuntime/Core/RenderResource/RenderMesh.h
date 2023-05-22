@@ -2,6 +2,7 @@
 #include "OpenRenderRuntime/Core/Basic/BoundingVolumes.h"
 #include "OpenRenderRuntime/Core/RHI/RHIBuffer.h"
 #include "OpenRenderRuntime/Core/RHI/RHIDescriptor.h"
+#include "OpenRenderRuntime/Util/AutoIncreaseIdAllocator.h"
 
 class RenderMesh
 {

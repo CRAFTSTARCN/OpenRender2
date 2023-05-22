@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <vector>
 
-#define MESHLET_MAGIC_NUMBER 0x20221219
+#define MESHLET_MAGIC_NUMBER 0x20230421
 
 /*
  * From nvidia's official suggestion
@@ -15,6 +15,8 @@ struct MeshletDescription
 	uint32_t PrimIndexBegin;
 	float CenterX, CenterY, CenterZ;
 	float ExtendX, ExtendY, ExtendZ;
+	uint32_t Cone;
+	float ApexOffset;
 };
 
 

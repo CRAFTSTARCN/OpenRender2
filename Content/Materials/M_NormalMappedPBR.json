@@ -1,0 +1,55 @@
+{
+    "AssetType": "MaterialBase",
+    "BaseShader": "./Materials/Shaders/NormalMappedPBR.shader",
+    "PassShaders": {
+        "GBuffer": {
+            "MeshShader": "./Materials/Shaders/NormalMappedPBR.GBuffer.Mesh",
+            "FragmentShader": "./Materials/Shaders/NormalMappedPBR.GBuffer.Frag"
+        }
+    },
+    "BlendMode": "Opaque",
+    "DoubleSided": false,
+    "BufferParameters": {
+        "Vec": [
+            "Emissive"
+        ],
+        "Scalar": [
+            "Metallic",
+            "Specular",
+            "Anisotropy"
+        ],
+        "BufferStage": [
+            "Frag"
+        ]
+    },
+    "TexParam": [
+        {
+            "Name": "BaseColor",
+            "Stage": [
+                "Frag"
+            ],
+            "Type": "Tex2D"
+        },
+        {
+            "Name": "Roughness",
+            "Stage": [
+                "Frag"
+            ],
+            "Type": "Tex2D"
+        },
+        {
+            "Name": "NormalMap",
+            "Stage": [
+                "Frag"
+            ],
+            "Type": "Tex2D"
+        },
+        {
+            "Name": "Subsurface",
+            "Stage": [
+                "Frag"
+            ],
+            "Type": "Tex2D"
+        }
+    ]
+}
