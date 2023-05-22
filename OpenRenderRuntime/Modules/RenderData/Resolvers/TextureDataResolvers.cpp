@@ -2,7 +2,6 @@
 
 #include <stb_image.h>
 
-#include "NeoRHI/RHI/RHIResource.h"
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
 #include "OpenRenderRuntime/Modules/RenderData/TextureSwapData.h"
 #include "OpenRenderRuntime/Util/Logger.h"
