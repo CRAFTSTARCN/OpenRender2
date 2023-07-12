@@ -130,7 +130,7 @@ if __name__ == "__main__":
             Index += 1
             
             pass
-
+        Index += 1
         pass
 
     compile_shader(shader_path, mat_path)
