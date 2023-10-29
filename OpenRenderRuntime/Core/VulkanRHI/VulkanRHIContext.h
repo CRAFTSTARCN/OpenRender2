@@ -62,9 +62,7 @@ public:
 
     VkSemaphore ImageRequireSemaphore = VK_NULL_HANDLE;
     VkSemaphore PresentSemaphore = VK_NULL_HANDLE;
-
-    VkDescriptorPool DescriptorPool = VK_NULL_HANDLE;
-
+    
     uint32_t CurrentFrameIndex = 0;
     
     bool EnableDebug = true;

@@ -9,12 +9,16 @@ class VulkanRHIDescriptorLayout : public RHIDescriptorLayout
 public:
 	
 	VkDescriptorSetLayout Layout = VK_NULL_HANDLE;
+
+	std::vector<VkDescriptorPoolSize> PoolSizeInfos;
 };
 
 class VulkanRHIDescriptorSet : public RHIDescriptorSet
 {
 	
 public:
+
+	VkDescriptorPool Pool = VK_NULL_HANDLE;
 	
 	VkDescriptorSet Set = VK_NULL_HANDLE;
 };

@@ -606,6 +606,7 @@ RHIDescriptorLayout* VulkanRHI::CreateDescriptorLayout(const std::vector<Descrip
 {
     std::vector<VkDescriptorSetLayoutBinding> Bindings(BindingInfos.size());
 
+    std::unordered_map<VkDescriptorType, uint32_t> DescriptorTypeMap; 
     for(size_t i=0; i<BindingInfos.size(); ++i)
     {
         VkDescriptorSetLayoutBinding &Binding = Bindings[i];
@@ -617,6 +618,11 @@ RHIDescriptorLayout* VulkanRHI::CreateDescriptorLayout(const std::vector<Descrip
         Binding.descriptorType = DescriptorTypeTransfer[BindingInfo.Type];
         Binding.stageFlags = BindingInfo.UsageStage;
         Binding.pImmutableSamplers = nullptr;
+        auto && [Iter, IsNew] = DescriptorTypeMap.try_emplace(DescriptorTypeTransfer[BindingInfo.Type], 1);
+        if(!IsNew)
+        {
+            (*Iter).second += 1;
+        }
     }
 
     VkDescriptorSetLayoutCreateInfo LayoutInfo {};
@@ -631,26 +637,45 @@ RHIDescriptorLayout* VulkanRHI::CreateDescriptorLayout(const std::vector<Descrip
         return nullptr;
     }
 
-    return new VulkanRHIDescriptorLayout{{}, Layout};
+    std::vector<VkDescriptorPoolSize> PoolSizes;
+    for (auto && [Type, Count] : DescriptorTypeMap)
+    {
+        PoolSizes.push_back({Type, Count});
+    }
+
+    return new VulkanRHIDescriptorLayout{{}, Layout, std::move(PoolSizes)};
 }
 
 RHIDescriptorSet* VulkanRHI::CreateDescriptorSet(RHIDescriptorLayout* RHILayout)
 {
     RHI_2_VK_CHECKED_NULL(VulkanRHIDescriptorLayout, RHILayout, VKRHILayout)
+
+    VkDescriptorPool Pool;
+    VkDescriptorPoolCreateInfo PoolCreateInfo {};
+    PoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    PoolCreateInfo.poolSizeCount = (uint32_t)VKRHILayout->PoolSizeInfos.size();
+    PoolCreateInfo.pPoolSizes = VKRHILayout->PoolSizeInfos.data();
+    PoolCreateInfo.maxSets = 1;
+    VkResult Result = vkCreateDescriptorPool(Context->Device, &PoolCreateInfo, nullptr, &Pool);
+    if(Result != VK_SUCCESS)
+    {
+        return nullptr;
+    }
+    
     VkDescriptorSetAllocateInfo DescriptorSetInfo {};
     DescriptorSetInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     DescriptorSetInfo.descriptorSetCount = 1;
     DescriptorSetInfo.pSetLayouts = &VKRHILayout->Layout;
-    DescriptorSetInfo.descriptorPool = Context->DescriptorPool;
+    DescriptorSetInfo.descriptorPool = Pool;
 
     VkDescriptorSet Set = VK_NULL_HANDLE;
-    VkResult Result = vkAllocateDescriptorSets(Context->Device, &DescriptorSetInfo, &Set);
+    Result = vkAllocateDescriptorSets(Context->Device, &DescriptorSetInfo, &Set);
     if(Result != VK_SUCCESS)
     {
         return nullptr;
     }
 
-    return new VulkanRHIDescriptorSet{{}, Set};
+    return new VulkanRHIDescriptorSet{{}, Pool, Set};
 }
 
 void VulkanRHI::WriteDescriptorSetMulti(RHIDescriptorSet* WriteSet, const std::vector<TextureWithSamplerWriteInfo>& Textures,
@@ -1192,7 +1217,7 @@ void VulkanRHI::DestroyDescriptorLayout(RHIDescriptorLayout*& Destroyed)
 void VulkanRHI::DestroyDescriptorSet(RHIDescriptorSet*& Destroyed)
 {
     RHI_2_VK_CHECKED(VulkanRHIDescriptorSet, Destroyed, VKSetDestroyed)
-    vkFreeDescriptorSets(Context->Device, Context->DescriptorPool, 1, &VKSetDestroyed->Set);
+    vkDestroyDescriptorPool(Context->Device, VKSetDestroyed->Pool, nullptr);
     delete VKSetDestroyed;
 }
 

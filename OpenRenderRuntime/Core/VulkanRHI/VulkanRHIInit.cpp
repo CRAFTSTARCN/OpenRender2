@@ -30,7 +30,6 @@ void VulkanRHI::InitializeVulkan()
     CreateCommandPool();
     CreateCommandBuffers();
     CreateSyncPrimitives();
-    CreateDescriptorPool();
 }
 
 void VulkanRHI::CreateVulkanInstance()
@@ -301,6 +300,7 @@ void VulkanRHI::CreateLogicalDevice()
     Features12.shaderInt8 = VK_TRUE;
     Features12.storageBuffer8BitAccess = VK_TRUE;
     Features12.descriptorIndexing = VK_TRUE;
+    Features12.scalarBlockLayout = VK_TRUE;
     MeshShaderFeatureEnable.pNext = &Features12;
     
     VkResult CreateResult = vkCreateDevice(Context->PhysicalDevice, &DeviceInfo, nullptr, &Context->Device);
@@ -579,39 +579,6 @@ void VulkanRHI::CreateSyncPrimitives()
     
 }
 
-void VulkanRHI::CreateDescriptorPool()
-{
-
-    LOG_DEBUG_FUNCTION("Creating descriptor pool");
-    
-    //TODO: set max threshold by material mesh
-    VkDescriptorPoolSize PoolSize[DESCRIPTOR_POOL_SIZE];
-    PoolSize[0].type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
-    PoolSize[0].descriptorCount = 32;
-    PoolSize[1].type            = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-    PoolSize[1].descriptorCount = 3096;
-    PoolSize[2].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    PoolSize[2].descriptorCount = 1024;
-    PoolSize[3].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    PoolSize[3].descriptorCount = 4096; 
-    PoolSize[4].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-    PoolSize[4].descriptorCount = 32;
-    PoolSize[5].type            = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-    PoolSize[5].descriptorCount = 1024;
-    PoolSize[6].type            = VK_DESCRIPTOR_TYPE_SAMPLER;
-    PoolSize[6].descriptorCount = 1024;
-
-    VkDescriptorPoolCreateInfo PoolInfo {};
-    PoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    PoolInfo.poolSizeCount = DESCRIPTOR_POOL_SIZE;
-    PoolInfo.pPoolSizes = PoolSize;
-    PoolInfo.maxSets = 2048 + 128;
-    PoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-    VkResult Result = vkCreateDescriptorPool(Context->Device, &PoolInfo, nullptr, &Context->DescriptorPool);
-    assert(Result == VK_SUCCESS);
-}
-
 void VulkanRHI::RecreateSwapChain()
 {
     WindowSize Size = GetWindowProxy().GetWindowSize();
@@ -653,7 +620,6 @@ void VulkanRHI::DestroyVulkanObjects()
     vkDestroySemaphore(Context->Device, Context->ImageRequireSemaphore, nullptr);
     vkDestroySemaphore(Context->Device, Context->PresentSemaphore, nullptr);
     
-    vkDestroyDescriptorPool(Context->Device, Context->DescriptorPool, nullptr);
     for(int i = 0; i < 10; ++i)
     {
         vkDestroyCommandPool(Context->Device, Context->DrawCommandPool[i], nullptr);

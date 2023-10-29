@@ -134,7 +134,6 @@ class VulkanRHI : public RHI
     void CreateCommandPool();
     void CreateCommandBuffers();
     void CreateSyncPrimitives();
-    void CreateDescriptorPool();
 
     void RecreateSwapChain();
 
