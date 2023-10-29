@@ -92,9 +92,9 @@ def compile_shader(shader_path_rel, material_path_rel):
             if pass_shader_dict.get(pass_name) != None:
                 print("[{}]: Error, duplicate pass name {}".format(shader_path_rel, pass_name))
             
-            if pass_name == "GBuffer":
-                import PassMaterialShaderCompiler.GBufferPass as GBufferPassCompliler
-                mesh, frag = GBufferPassCompliler.compile_pass_spv_shader(pass_content, param_table, vert_usage, frag_usage, shader_path_rel)
+            if pass_name == "MeshDraw":
+                import PassMaterialShaderCompiler.MeshDrawPass as MeshDrawCompiler
+                mesh, frag = MeshDrawCompiler.compile_pass_spv_shader(pass_content, param_table, vert_usage, frag_usage, shader_path_rel)
 
                 print(mesh, frag)
                 pass_shader_dict.update({pass_name : {"MeshShader" : Util.get_path_no_ext_name(mesh), "FragmentShader" : Util.get_path_no_ext_name(frag)}})

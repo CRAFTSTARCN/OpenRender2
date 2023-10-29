@@ -6,9 +6,9 @@
 #include "OpenRenderRuntime/Core/RHI/RHISemaphoreView.h"
 
 /*
- * Post gbuffer, shading, tone mapping 
+ * DeferredShading, shading 
  */
-class PostCombinedPass : public MeshMaterialPass, public IIBLPass
+class DeferredShadingPass : public RenderPass, public IIBLPass
 {
 	
 	RHIRenderPass* Pass = nullptr;
@@ -45,10 +45,6 @@ public:
 	void DrawPass() override;
 
 	void Terminate() override;
-	
-	void OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase) override;
-
-	void OnDestroyMaterialBase(RenderMaterialBase* DestroyedMaterialBase) override;
 
 	void OnResize(uint32_t Width, uint32_t Height) override;
 

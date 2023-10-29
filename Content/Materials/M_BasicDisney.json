@@ -1,34 +1,36 @@
 {
-    "AssetType" : "MaterialBase",
-
-    "BaseShader" : "./Materials/Shaders/BasicDisneyPBR.Shader",
-    "PassShaders" : {
-        "GBuffer" : {
-            "MeshShader" : "./Materials/Shaders/BasicDisneyPBR.GBuffer.Mesh",
-            "FragmentShader" : "./Materials/ShaderS/BasicDisneyPBR.GBuffer.Frag"
+    "AssetType": "MaterialBase",
+    "BaseShader": "./Materials/Shaders/BasicDisneyPBR.shader",
+    "PassShaders": {
+        "MeshDraw": {
+            "MeshShader": "./Materials/Shaders/BasicDisneyPBR.MeshDraw.Mesh",
+            "FragmentShader": "./Materials/Shaders/BasicDisneyPBR.MeshDraw.Frag"
         }
     },
-
-    "BlendMode" : "Opaque",
-    "DoubleSided" : false,
-
-    "BufferParameters" : {
-        "Vec" : ["Emissive"],
-        "Scalar" : [
+    "BlendMode": "Opaque",
+    "DoubleSided": false,
+    "BufferParameters": {
+        "Vec": [
+            "Emissive"
+        ],
+        "Scalar": [
             "Metallic",
             "Specular",
             "Roughness",
             "Subsurface",
-            "Anisotropy"],
-        "BufferStage" : ["Frag"]
+            "Anisotropy"
+        ],
+        "BufferStage": [
+            "Frag"
+        ]
     },
-
-    "TexParam" : [
+    "TexParam": [
         {
-        "Name" : "BaseColor",
-        "Stage" : ["Frag"],
-        "Type" : "Tex2D"
+            "Name": "BaseColor",
+            "Stage": [
+                "Frag"
+            ],
+            "Type": "Tex2D"
         }
     ]
-
 }

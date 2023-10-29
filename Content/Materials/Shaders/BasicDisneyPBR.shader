@@ -26,7 +26,7 @@ false
 
 [[Pass]] 
     [[PassName]]
-    GBuffer
+    MeshDraw
     [[PassName]]
     
     [[VertexProcessInclude]]

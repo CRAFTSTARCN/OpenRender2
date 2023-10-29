@@ -35,8 +35,8 @@ protected:
 
 	void SetupGlobalData();
 
-	MeshMaterialPass* PreGBuffer = nullptr;
-	RenderPass* Post = nullptr;
+	MeshMaterialPass* MeshDraw = nullptr;
+	RenderPass* DeferredShading = nullptr;
 
 	MultiTimeRunable PreThread;
 	MultiTimeRunable PostThread;

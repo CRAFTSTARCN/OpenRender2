@@ -2,9 +2,9 @@
     "AssetType": "MaterialBase",
     "BaseShader": "./Materials/Shaders/NormalMappedPBR.shader",
     "PassShaders": {
-        "GBuffer": {
-            "MeshShader": "./Materials/Shaders/NormalMappedPBR.GBuffer.Mesh",
-            "FragmentShader": "./Materials/Shaders/NormalMappedPBR.GBuffer.Frag"
+        "MeshDraw": {
+            "MeshShader": "./Materials/Shaders/NormalMappedPBR.MeshDraw.Mesh",
+            "FragmentShader": "./Materials/Shaders/NormalMappedPBR.MeshDraw.Frag"
         }
     },
     "BlendMode": "Opaque",

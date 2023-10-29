@@ -1,4 +1,4 @@
-﻿#include "OpenRenderRuntime/Core/RenderPass/BuiltinPasses/PreGBufferPass.h"
+﻿#include "MeshDrawPass.h"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/gtc/type_ptr.hpp>
@@ -10,7 +10,7 @@
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
 #include "OpenRenderRuntime/Util/Logger.h"
 
-void PreGBufferPass::CreateRenderPass()
+void MeshDrawPass::CreateRenderPass()
 {
 	AttachmentDescription ColorAttachment {};
 	ColorAttachment.Format = RHIFormat_RGBA8;
@@ -57,7 +57,7 @@ void PreGBufferPass::CreateRenderPass()
 	
 }
 
-void PreGBufferPass::CreateFrameBuffer(uint32_t Width, uint32_t Height)
+void MeshDrawPass::CreateFrameBuffer(uint32_t Width, uint32_t Height)
 {
 	GBuffer& GlobalGBufferRef = ResourcePtr->GlobalGBuffer;
 	FrameBuffer = RHIPtr->CreateFrameBuffer(
@@ -75,12 +75,12 @@ void PreGBufferPass::CreateFrameBuffer(uint32_t Width, uint32_t Height)
 
 	if(!FrameBuffer)
 	{
-		LOG_ERROR_FUNCTION("Fail to create pre gbuffer pass frame buffer, fatal");
+		LOG_ERROR_FUNCTION("Fail to create mesh draw pass frame buffer, fatal");
 		assert(false);
 	}
 }
 
-void PreGBufferPass::CreateGlobalDataSetAndLayout()
+void MeshDrawPass::CreateGlobalDataSetAndLayout()
 {
 	
 	GlobalDataLayout = RHIPtr->CreateDescriptorLayout({
@@ -91,7 +91,7 @@ void PreGBufferPass::CreateGlobalDataSetAndLayout()
 
 	if(!GlobalDataLayout)
 	{
-		LOG_ERROR_FUNCTION("Fail to create pre gbuffer pass global set layout, fatal");
+		LOG_ERROR_FUNCTION("Fail to create mesh draw pass global set layout, fatal");
 		assert(false);
 	}
 
@@ -99,7 +99,7 @@ void PreGBufferPass::CreateGlobalDataSetAndLayout()
 
 	if(!GlobalDataSet)
 	{
-		LOG_ERROR_FUNCTION("Fail to create pre gbuffer pass descriptor set, fatal");
+		LOG_ERROR_FUNCTION("Fail to create mesh draw pass descriptor set, fatal");
 	}
 
 	RHIPtr->WriteDescriptorSetMulti(GlobalDataSet, {}, {}, {
@@ -112,7 +112,7 @@ void PreGBufferPass::CreateGlobalDataSetAndLayout()
 		}});
 }
 
-void PreGBufferPass::CreateDrawCallDataSetAndLayout()
+void MeshDrawPass::CreateDrawCallDataSetAndLayout()
 {
 	DrawCallLayout = RHIPtr->CreateDescriptorLayout({
 		{
@@ -141,54 +141,54 @@ void PreGBufferPass::CreateDrawCallDataSetAndLayout()
 	ResourcePtr->RegisteredSet.emplace("DrawCallSet", DrawCallSet);
 }
 
-void PreGBufferPass::LoadPassTaskShader()
+void MeshDrawPass::LoadPassTaskShader()
 {
-	std::vector<std::byte> ShaderCode = LoadPassShaderCode("PreGBufferTask.Task");
+	std::vector<std::byte> ShaderCode = LoadPassShaderCode("MeshDrawTask.Task");
 	if(ShaderCode.size() == 0)
 	{
-		LOG_ERROR_FUNCTION("Fail to load task shader for pre gbuffer pass");
+		LOG_ERROR_FUNCTION("Fail to load task shader for mesh draw pass");
 		assert(false);
 	}
 	TaskShader = RHIPtr->CreateTaskShader(ShaderCode.data(), ShaderCode.size());
 	if(!TaskShader)
 	{
-		LOG_ERROR_FUNCTION("Fail to load task shader for pre gbuffer pass, fatal");
+		LOG_ERROR_FUNCTION("Fail to load task shader for mesh draw pass, fatal");
 		assert(false);
 	}
 }
 
-void PreGBufferPass::CreateSemaphores()
+void MeshDrawPass::CreateSemaphores()
 {
 	/*
 	 * GPU
 	 */
 	SignaledSemaphore = RHIPtr->CreateSemaphore();
-	BBPtr->RegisteredGPUSemaphores.emplace("PreGBufferSemaphore", SignaledSemaphore);
+	BBPtr->RegisteredGPUSemaphores.emplace("MeshDrawSemaphore", SignaledSemaphore);
 
 	/*
 	 * CPU
 	 */
 	SubmitSemaphore = new Semaphore;
-	BBPtr->RegisteredCPUSemaphores.emplace("PreGBufferSubmit", SubmitSemaphore);
+	BBPtr->RegisteredCPUSemaphores.emplace("MeshDrawSubmit", SubmitSemaphore);
 }
 
-PreGBufferPass::PreGBufferPass()
+MeshDrawPass::MeshDrawPass()
 {
 	Id = RenderPass::PassIdAllocator.GetNewId();
 	MaterialPassId = MeshMaterialPass::MatIdAllocator.GetNewId();
 }
 
-PreGBufferPass::~PreGBufferPass()
+MeshDrawPass::~MeshDrawPass()
 {
 }
 
-void PreGBufferPass::OnResize(uint32_t Width, uint32_t Height)
+void MeshDrawPass::OnResize(uint32_t Width, uint32_t Height)
 {
 	RHIPtr->DestroyFrameBuffer(FrameBuffer);
 	CreateFrameBuffer(Width, Height);	
 }
 
-void PreGBufferPass::Initialize()
+void MeshDrawPass::Initialize()
 {
 
 	MeshMaterialPass::Initialize();
@@ -200,10 +200,10 @@ void PreGBufferPass::Initialize()
 	CreateDrawCallDataSetAndLayout();
 	CreateSemaphores();
 
-	ScenePtr->RegisterQueue("GBufferQueue", &Queue);
+	ScenePtr->RegisterQueue("MeshDrawQueue", &Queue);
 }
 
-void PreGBufferPass::DrawPass()
+void MeshDrawPass::DrawPass()
 {
 	RHICommandList* CommandList = RHIPtr->GetCommandList(RenderingTaskQueue_Graphics);
 	std::vector<ClearColorInfo> ClearColors(6);
@@ -314,7 +314,7 @@ void PreGBufferPass::DrawPass()
 	SubmitSemaphore->Signal();
 }
 
-void PreGBufferPass::Terminate()
+void MeshDrawPass::Terminate()
 {
 	MeshMaterialPass::Terminate();
 	
@@ -329,15 +329,15 @@ void PreGBufferPass::Terminate()
 	RHIPtr->DestroyDescriptorSet(GlobalDataSet);
 	RHIPtr->DestroyDescriptorLayout(GlobalDataLayout);
 
-	BBPtr->RegisteredGPUSemaphores.erase("PreGBufferSemaphore");
+	BBPtr->RegisteredGPUSemaphores.erase("MeshDrawSemaphore");
 	RHIPtr->DestroySemaphore(SignaledSemaphore);
 
-	BBPtr->RegisteredCPUSemaphores.erase("PreGBufferSubmit");
-	ScenePtr->Queues.erase("GBufferQueue");
+	BBPtr->RegisteredCPUSemaphores.erase("MeshDrawSubmit");
+	ScenePtr->Queues.erase("MeshDrawQueue");
 
 }
 
-void PreGBufferPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase)
+void MeshDrawPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase)
 {
 	if(Data->BlendMode == PipelineBlendMode_Translucent || Data->BlendMode == PipelineBlendMode_Additive)
 	{
@@ -352,7 +352,7 @@ void PreGBufferPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMa
 		PipelineInfo.RasterizationCullFace = CullFace_Back;
 	}
 
-	auto Iter = Data->ShaderDataTable.find("GBuffer");
+	auto Iter = Data->ShaderDataTable.find("MeshDraw");
 	if(Iter == Data->ShaderDataTable.end())
 	{
 		//No shader data
@@ -404,7 +404,7 @@ void PreGBufferPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMa
 	RHIPtr->DestroyShader(FragmentShader);
 }
 
-void PreGBufferPass::OnDestroyMaterialBase(RenderMaterialBase* DestroyedMaterialBase)
+void MeshDrawPass::OnDestroyMaterialBase(RenderMaterialBase* DestroyedMaterialBase)
 {
 	if(DestroyedMaterialBase->Pipelines.size() <= MaterialPassId || !DestroyedMaterialBase->Pipelines[MaterialPassId])
 	{
@@ -415,7 +415,7 @@ void PreGBufferPass::OnDestroyMaterialBase(RenderMaterialBase* DestroyedMaterial
 	RHIPtr->DestroyPipeline(DestroyedPipeline);
 }
 
-std::string PreGBufferPass::GetRenderPassName() const
+std::string MeshDrawPass::GetRenderPassName() const
 {
-	return "PreGBuffer";
+	return "MeshDraw";
 }

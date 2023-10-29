@@ -30,7 +30,7 @@ false
 
 [[Pass]] 
     [[PassName]]
-    GBuffer
+    MeshDraw
     [[PassName]]
 
     

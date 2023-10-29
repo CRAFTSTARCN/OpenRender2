@@ -11,7 +11,7 @@ from Theading import add_work, all_shutdown
 
 def test():
 
-    add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/PreGBufferTask.Task.glsl", SPVCompiler.STAGE_TASK, "../PassShader/spv/PreGBufferTask.Task.spv")
+    add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/MeshDrawTask.Task.glsl", SPVCompiler.STAGE_TASK, "../PassShader/spv/MeshDrawTask.Task.spv")
     add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/DeferredShadingMesh.Mesh.glsl", SPVCompiler.STAGE_MESH, "../PassShader/spv/DeferredShadingMesh.Mesh.spv")
     add_work(SPVCompiler.compile_shader_2_spv_glsl, "../PassShader/src/DeferredShadingFrag.Frag.glsl", SPVCompiler.STAGE_FRAG, "../PassShader/spv/DeferredShadingFrag.Frag.spv")
 

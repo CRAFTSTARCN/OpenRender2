@@ -6,7 +6,7 @@
 #include "OpenRenderRuntime/Core/RHI/RHISemaphore.h"
 #include "OpenRenderRuntime/Core/RHI/RHIShaderModule.h"
 
-class  PreGBufferPass : public MeshMaterialPass
+class  MeshDrawPass : public MeshMaterialPass
 {
 	RHIRenderPass* Pass = nullptr;
 	RHIFrameBuffer* FrameBuffer = nullptr;
@@ -38,8 +38,8 @@ class  PreGBufferPass : public MeshMaterialPass
 	
 public:
 
-	PreGBufferPass();
-	~PreGBufferPass() override;
+	MeshDrawPass();
+	~MeshDrawPass() override;
 
 	void OnResize(uint32_t Width, uint32_t Height) override;
 

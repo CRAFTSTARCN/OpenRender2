@@ -28,6 +28,10 @@ void RenderPass::PostInit()
 	Ready = true;
 }
 
+void RenderPass::Terminate()
+{
+}
+
 bool RenderPass::GetPassReadyState() const
 {
 	return  Ready;

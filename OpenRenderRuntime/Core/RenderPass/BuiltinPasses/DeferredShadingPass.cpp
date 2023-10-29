@@ -1,10 +1,10 @@
-﻿#include "PostCombinedPass.h"
+﻿#include "DeferredShadingPass.h"
 
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
 #include "OpenRenderRuntime/Util/Logger.h"
 
-void PostCombinedPass::CreateRenderPass()
+void DeferredShadingPass::CreateRenderPass()
 {
 	AttachmentDescription ColorAttachment {};
 	ColorAttachment.Format = RHIFormat_RGBA8;
@@ -27,22 +27,6 @@ void PostCombinedPass::CreateRenderPass()
 	SwapChainImage.InitialLayout = TextureStatus_Undefined;
 	SwapChainImage.FinalLayout = TextureStatus_For_Present;
 
-	SubpassInfo PostGBufferSubpass {};
-	for(uint32_t i=0; i<5; ++i)
-	{
-		PostGBufferSubpass.ColorAttachment.push_back({i, TextureStatus_Color_Attachment});
-	}
-	PostGBufferSubpass.DepthStencilAttachment = {5u, TextureStatus_Depth_Stencil_Attachment};
-	PostGBufferSubpass.RequireDepthStencil = true;
-	PostGBufferSubpass.Dependency.push_back({
-		SUBPASS_DEPEND_PASS_EXTERNAL,
-		PipelineStageBit_Output_Color,
-		PipelineStageBit_Output_Color,
-		AccessMaskBit_Color_Attachment_Write,
-		AccessMaskBit_Color_Attachment_Write,
-		true
-	});
-
 	SubpassInfo DeferredShadingSubpass {};
 	for(int i=0; i<6; ++i)
 	{
@@ -55,7 +39,7 @@ void PostCombinedPass::CreateRenderPass()
 	DeferredShadingSubpass.RequireDepthStencil = false;
 
 	DeferredShadingSubpass.Dependency.push_back({
-		0,
+		SUBPASS_DEPEND_PASS_EXTERNAL,
 		PipelineStageBit_Output_Color,
 		PipelineStageBit_Fragment,
 		AccessMaskBit_Color_Attachment_Write,
@@ -64,7 +48,7 @@ void PostCombinedPass::CreateRenderPass()
 	
 	DeferredShadingSubpass.Dependency.push_back({
 		SUBPASS_DEPEND_PASS_EXTERNAL,
-		PipelineStageBit_Output_Color,
+		PipelineStageBit_Start,
 		PipelineStageBit_Output_Color,
 		0,
 		AccessMaskBit_Color_Attachment_Write,
@@ -77,16 +61,16 @@ void PostCombinedPass::CreateRenderPass()
 		ColorAttachment,
 		ColorAttachment,
 		DepthStencilAttachment,
-		SwapChainImage}, {PostGBufferSubpass, DeferredShadingSubpass});
+		SwapChainImage}, {DeferredShadingSubpass});
 
 	if(!Pass)
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: fail to create render pass");
+		LOG_ERROR_FUNCTION("Deferred shading pass: fail to create render pass");
 		assert(false);
 	}
 }
 
-void PostCombinedPass::CreateDeferredShadingDescriptors()
+void DeferredShadingPass::CreateDeferredShadingDescriptors()
 {
 	DeferredShadingGlobalLayout = RHIPtr->CreateDescriptorLayout({
 		{DescriptorType_Uniform_Buffer, ShaderStageTypeBit_Fragment},
@@ -97,14 +81,14 @@ void PostCombinedPass::CreateDeferredShadingDescriptors()
 		/*{DescriptorType_Texture, ShaderStageTypeBit_Fragment}*/}); //no shadow currently
 	if(!DeferredShadingGlobalLayout)
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: fail to create descriptor layout for deferred shading");
+		LOG_ERROR_FUNCTION("Deferred shading pass: fail to create descriptor layout for deferred shading");
 		assert(false);
 	}
 
 	DeferredShadingGlobal = RHIPtr->CreateDescriptorSet(DeferredShadingGlobalLayout);
 	if(!DeferredShadingGlobal)
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: fail to create descriptor set for deferred shading");
+		LOG_ERROR_FUNCTION("Deferred shading pass: fail to create descriptor set for deferred shading");
 		assert(false);
 	}
 
@@ -117,14 +101,14 @@ void PostCombinedPass::CreateDeferredShadingDescriptors()
 		{DescriptorType_Input_Attachment, ShaderStageTypeBit_Fragment}});
 	if(!DeferredShadingGBufferLayout)
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: Fail to create descriptor layout for subpass inputs");
+		LOG_ERROR_FUNCTION("Deferred shading pass: Fail to create descriptor layout for subpass inputs");
 		assert(false);
 	}
 
 	DeferredShadingGBuffer = RHIPtr->CreateDescriptorSet(DeferredShadingGBufferLayout);
 	if(!DeferredShadingGBuffer)
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: Fail to create descriptor set for subpass inputs");
+		LOG_ERROR_FUNCTION("Deferred shading pass: Fail to create descriptor set for subpass inputs");
 		assert(false);
 	}
 
@@ -138,7 +122,7 @@ void PostCombinedPass::CreateDeferredShadingDescriptors()
 	UpdateGBufferAndDepth();
 }
 
-void PostCombinedPass::UpdateGBufferAndDepth()
+void DeferredShadingPass::UpdateGBufferAndDepth()
 {
 	GBuffer& GBufferRef = ResourcePtr->GlobalGBuffer;
 	std::vector<RHITexture*> Inputs = {
@@ -162,7 +146,7 @@ void PostCombinedPass::UpdateGBufferAndDepth()
 	RHIPtr->WriteDescriptorSetMulti(DeferredShadingGBuffer, {}, ImageWrites, {});
 }
 
-void PostCombinedPass::UpdateGlobalTexture(const IBLResource& IBL)
+void DeferredShadingPass::UpdateGlobalTexture(const IBLResource& IBL)
 {
 	RenderTexture* SkyBox = IBL.SkyBox;
 	RenderTexture* Radiance = IBL.RadianceMap;
@@ -192,7 +176,7 @@ void PostCombinedPass::UpdateGlobalTexture(const IBLResource& IBL)
 	
 }
 
-void PostCombinedPass::CreateFrameBuffers(uint32_t Width, uint32_t Height)
+void DeferredShadingPass::CreateFrameBuffers(uint32_t Width, uint32_t Height)
 {
 	FrameBuffers.resize(RHIPtr->GetSwapchainImageCount());
 	GBuffer& GlobalGBufferRef = ResourcePtr->GlobalGBuffer;
@@ -221,34 +205,34 @@ void PostCombinedPass::CreateFrameBuffers(uint32_t Width, uint32_t Height)
 	}
 }
 
-void PostCombinedPass::CreatePipeline()
+void DeferredShadingPass::CreatePipeline()
 {
 	std::vector<std::byte> MeshShaderCode = LoadPassShaderCode("DeferredShadingMesh.Mesh");
 	std::vector<std::byte> FragShaderCode = LoadPassShaderCode("DeferredShadingFrag.Frag");
 
 	if(MeshShaderCode.empty())
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: fail to load deferred lighting mesh shader");
+		LOG_ERROR_FUNCTION("Deferred shading pass: fail to load deferred lighting mesh shader");
 		assert(false);
 	}
 
 	if(FragShaderCode.empty())
 	{
-		LOG_ERROR_FUNCTION("Post combined pass: fail to load deferred lighting frag shader");
+		LOG_ERROR_FUNCTION("Deferred shading pass: fail to load deferred lighting frag shader");
 		assert(false);
 	}
 
 	RHIShaderModule*  DeferredShadingMeshShader = RHIPtr->CreateMeshShader(MeshShaderCode.data(), MeshShaderCode.size());
 	if(MeshShaderCode.empty())
 	{
-		LOG_ERROR_FUNCTION("Post combined pass mesh shader create fail");
+		LOG_ERROR_FUNCTION("Deferred shading pass mesh shader create fail");
 		assert(false);
 	}
 
 	RHIShaderModule* DeferredShadingFragShader = RHIPtr->CreateFragmentShader(FragShaderCode.data(), FragShaderCode.size());
 	if(FragShaderCode.empty())
 	{
-		LOG_ERROR_FUNCTION("Post combined pass fragment shader create fail");
+		LOG_ERROR_FUNCTION("Deferred shading pass fragment shader create fail");
 		assert(false);
 	}
 
@@ -278,10 +262,10 @@ void PostCombinedPass::CreatePipeline()
 	RHIPtr->DestroyShader(DeferredShadingFragShader);
 }
 
-void PostCombinedPass::CreateSyncView()
+void DeferredShadingPass::CreateSyncView()
 {
 	WaitView = RHIPtr->CreateSemaphoreView(RHIPtr->GetRenderStartSemaphore(), PipelineStageBit_Output_Color);
-	auto SubmitSemaphoreIter = BBPtr->RegisteredCPUSemaphores.find("PreGBufferSubmit");
+	auto SubmitSemaphoreIter = BBPtr->RegisteredCPUSemaphores.find("MeshDrawSubmit");
 	if(SubmitSemaphoreIter == BBPtr->RegisteredCPUSemaphores.end())
 	{
 		LOG_ERROR_FUNCTION("Fail to find dependency pass semaphore, halt");
@@ -291,9 +275,9 @@ void PostCombinedPass::CreateSyncView()
 }
 
 
-void PostCombinedPass::Initialize()
+void DeferredShadingPass::Initialize()
 {
-	MeshMaterialPass::Initialize();
+	RenderPass::Initialize();
 
 	CreateDeferredShadingDescriptors();
 	CreateRenderPass();
@@ -302,7 +286,7 @@ void PostCombinedPass::Initialize()
 	CreateSyncView();
 }
 
-void PostCombinedPass::DrawPass()
+void DeferredShadingPass::DrawPass()
 {
 	IBLResource& CurrentGlobalIBL = ResourcePtr->GlobalIBLResource;
 	RenderTexture* SkyBox = CurrentGlobalIBL.SkyBox;
@@ -334,8 +318,6 @@ void PostCombinedPass::DrawPass()
 		FrameBuffers[RHIPtr->GetCurrentSwapchainImageIndex()],
 		ClearColors,
 		{RHIPtr->GetSwapchainExtendWidth(), RHIPtr->GetSwapchainExtendHeight(), 0 ,0 });
-
-	RHIPtr->StartNextSubpass(CommandList);
 	
 	RHIPtr->UseGraphicsPipeline(CommandList, DeferredShadingPipeline);
 	RHIPtr->SetDescriptorSet(CommandList, DeferredShadingPipeline, DeferredShadingGlobal, 0, {});
@@ -352,9 +334,9 @@ void PostCombinedPass::DrawPass()
 	++FrameNum;
 }
 
-void PostCombinedPass::Terminate()
+void DeferredShadingPass::Terminate()
 {
-	MeshMaterialPass::Terminate();
+	RenderPass::Terminate();
 
 	RHIPtr->DestroyPipeline(DeferredShadingPipeline);
 	for(auto FrameBuffer : FrameBuffers)
@@ -369,17 +351,7 @@ void PostCombinedPass::Terminate()
 	RHIPtr->DestroySemaphoreView(WaitView);
 }
 
-void PostCombinedPass::OnCreateMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* NewMaterialBase)
-{
-	//Currently, nothing
-}
-
-void PostCombinedPass::OnDestroyMaterialBase(RenderMaterialBase* DestroyedMaterialBase)
-{
-	//Currently, nothing
-}
-
-void PostCombinedPass::OnResize(uint32_t Width, uint32_t Height)
+void DeferredShadingPass::OnResize(uint32_t Width, uint32_t Height)
 {
 	for(auto FrameBuffer : FrameBuffers)
 	{
@@ -390,13 +362,13 @@ void PostCombinedPass::OnResize(uint32_t Width, uint32_t Height)
 	UpdateGBufferAndDepth();
 }
 
-void PostCombinedPass::OnUpdateIBLResource(const IBLResource& IBL)
+void DeferredShadingPass::OnUpdateIBLResource(const IBLResource& IBL)
 {
 	UpdateGlobalTexture(IBL);
 }
 
 
-std::string PostCombinedPass::GetRenderPassName() const
+std::string DeferredShadingPass::GetRenderPassName() const
 {
-	return "PostCombinedPass";
+	return "DeferredShading";
 }

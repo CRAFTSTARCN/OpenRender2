@@ -41,7 +41,7 @@ public:
 
 	virtual void PostInit();
 	
-	virtual void Terminate() = 0;
+	virtual void Terminate();
 	
 	virtual void DrawPass() = 0;
 

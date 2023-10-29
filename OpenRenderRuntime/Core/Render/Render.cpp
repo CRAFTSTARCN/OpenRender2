@@ -3,8 +3,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "OpenRenderRuntime/Core/Render/RenderSwapDataProcessor.h"
-#include "OpenRenderRuntime/Core/RenderPass/BuiltinPasses/PostCombinedPass.h"
-#include "OpenRenderRuntime/Core/RenderPass/BuiltinPasses/PreGBufferPass.h"
+#include "OpenRenderRuntime/Core/RenderPass/BuiltinPasses/DeferredShadingPass.h"
+#include "..\RenderPass\BuiltinPasses\MeshDrawPass.h"
 #include "OpenRenderRuntime/Core/VulkanRHI/VulkanRHI.h"
 
 void Render:: SetupGlobalData()
@@ -34,8 +34,8 @@ Render::Render()
 
 	//Allocate render pass
 
-	PreGBuffer = new PreGBufferPass;
-	Post = new PostCombinedPass;
+	MeshDraw = new MeshDrawPass;
+	DeferredShading = new DeferredShadingPass;
 }
 
 Render::~Render()
@@ -58,8 +58,8 @@ void Render::Tick(float DeltaTime)
 	SetupGlobalData();
 
 	RenderRHI->BeginFrameRendering();
-	PreThread.Run([&](){PreGBuffer->DrawPass();});
-	PostThread.Run([&](){Post->DrawPass();});
+	PreThread.Run([&](){MeshDraw->DrawPass();});
+	PostThread.Run([&](){DeferredShading->DrawPass();});
 
 	PreThread.WaitForPushable();
 	PostThread.WaitForPushable();
@@ -78,8 +78,8 @@ void Render::PreInit()
 void Render::Init(RenderSwapDataCenter* InSwapDataCenter)
 {
 
-	PreGBuffer->PreInit(Scene, Resources, RenderRHI, BB);
-	Post->PreInit(Scene, Resources, RenderRHI, BB);
+	MeshDraw->PreInit(Scene, Resources, RenderRHI, BB);
+	DeferredShading->PreInit(Scene, Resources, RenderRHI, BB);
 	
 	SwapDataCenterPtr = InSwapDataCenter;
 	SwapDataProcessor->Initialize(RenderComponentsData{this, Resources, Scene, RenderRHI});
@@ -87,11 +87,11 @@ void Render::Init(RenderSwapDataCenter* InSwapDataCenter)
 	Resources->Initialize(RenderRHI);
 	Scene->Initialize();
 
-	PreGBuffer->Initialize();
-	Post->Initialize();
+	MeshDraw->Initialize();
+	DeferredShading->Initialize();
 
-	PreGBuffer->PostInit();
-	Post->PostInit();
+	MeshDraw->PostInit();
+	DeferredShading->PostInit();
 	/*
  	 * Initial loading process
  	 */
@@ -105,8 +105,8 @@ void Render::Terminate()
 {
 	RenderRHI->PreTerminate();
 	
-	Post->Terminate();
-	PreGBuffer->Terminate();
+	DeferredShading->Terminate();
+	MeshDraw->Terminate();
 
 	PreThread.WaitForPushable();
 	PostThread.WaitForPushable();
@@ -119,19 +119,19 @@ void Render::Terminate()
 
 void Render::OnAddNewMaterialBase(MaterialBaseCreateData* Data, RenderMaterialBase* MaterialBase)
 {
-	PreGBuffer->OnCreateMaterialBase(Data, MaterialBase);
+	MeshDraw->OnCreateMaterialBase(Data, MaterialBase);
 }
 
 void Render::OnMaterialBaseDestroyed(RenderMaterialBase* Destroyed)
 {
-	PreGBuffer->OnDestroyMaterialBase(Destroyed);
+	MeshDraw->OnDestroyMaterialBase(Destroyed);
 }
 
 void Render::OnUpdateGlobalIBLResource(const IBLResource& IBL)
 {
-	if(Post->GetPassReadyState())
+	if(DeferredShading->GetPassReadyState())
 	{
-		IIBLPass* PostCombinedPtr = dynamic_cast<IIBLPass*>(Post);
+		IIBLPass* PostCombinedPtr = dynamic_cast<IIBLPass*>(DeferredShading);
 		PostCombinedPtr->OnUpdateIBLResource(IBL);
 	}
 }
@@ -139,8 +139,8 @@ void Render::OnUpdateGlobalIBLResource(const IBLResource& IBL)
 void Render::OnResize(uint32_t Width, uint32_t Height)
 {
 	Resources->OnResize(Width, Height);
-	PreGBuffer->OnResize(Width, Height);
-	Post->OnResize(Width, Height);
+	MeshDraw->OnResize(Width, Height);
+	DeferredShading->OnResize(Width, Height);
 }
 
 void Render::InitialLoading()

@@ -4,10 +4,10 @@ import Config
 import Util
 import SPVCompiler
 
-PASS_NAME = "GBuffer"
+PASS_NAME = "MeshDraw"
 
-MESH_TEMPLATE_NAME = "GBufferTemplateMesh.Mesh.glsl"
-FRAG_TEMPLATE_NAME = "GBufferTemplateFrag.Frag.glsl"
+MESH_TEMPLATE_NAME = "MeshDrawTemplateMesh.Mesh.glsl"
+FRAG_TEMPLATE_NAME = "MeshDrawTemplateFrag.Frag.glsl"
 
 MATERIAL_SET = 2
 
@@ -94,8 +94,8 @@ def generate_shader_file_glsl(passbody, param_table, vert_usage, frag_usage, sha
 
 
     shader_file_rel_no_ext = Util.get_path_no_ext_name(shader_file_path_rel)
-    mesh_shader_rel_path = shader_file_rel_no_ext + ".GBuffer.Mesh.glsl"
-    frag_shader_rel_path = shader_file_rel_no_ext + ".GBuffer.Frag.glsl"
+    mesh_shader_rel_path = shader_file_rel_no_ext + ".{}.Mesh.glsl".format(PASS_NAME)
+    frag_shader_rel_path = shader_file_rel_no_ext + ".{}.Frag.glsl".format(PASS_NAME)
     mesh_shader_file_path = os.path.join(Config.CACHE_DIR, mesh_shader_rel_path)
     frag_shader_file_path = os.path.join(Config.CACHE_DIR, frag_shader_rel_path)
 

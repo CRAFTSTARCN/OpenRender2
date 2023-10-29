@@ -1,5 +1,5 @@
 from Util import param_resolver
-from PassMaterialShaderCompiler import GBufferPass
+from PassMaterialShaderCompiler import MeshDrawPass
 
 try:
     params, war = param_resolver('''Vec Emissive
@@ -13,7 +13,7 @@ Tex BaseColor''')
     print(params)
     print("[Warning]", war)
 
-    GBufferPass.compile_pass_spv_shader('''
+    MeshDrawPass.compile_pass_spv_shader('''
     "GBuffer"
 
     [[VertexProcessInclude]]
