@@ -26,18 +26,18 @@ void MeshDrawPass::CreateRenderPass()
 	DepthStencilAttachment.InitialLayout = TextureStatus_Undefined;
 	DepthStencilAttachment.FinalLayout = TextureStatus_Depth_Stencil_Attachment;
 
-	SubpassInfo PreGBufferSubpass {};
+	SubpassInfo MeshDraw {}; 
 	for(int i=0; i<5; ++i)
 	{
 		SubpassAttachmentRef Ref {};
 		Ref.Index = i;
 		Ref.RequireLayout = TextureStatus_Color_Attachment;
-		PreGBufferSubpass.ColorAttachment.push_back(Ref);
+		MeshDraw.ColorAttachment.push_back(Ref);
 	}
 
-	PreGBufferSubpass.DepthStencilAttachment.Index = 5;
-	PreGBufferSubpass.DepthStencilAttachment.RequireLayout = TextureStatus_Depth_Stencil_Attachment;
-	PreGBufferSubpass.RequireDepthStencil = true;
+	MeshDraw.DepthStencilAttachment.Index = 5;
+	MeshDraw.DepthStencilAttachment.RequireLayout = TextureStatus_Depth_Stencil_Attachment;
+	MeshDraw.RequireDepthStencil = true;
 	
 	Pass = RHIPtr->CreateRenderPass(
 		{
@@ -47,7 +47,7 @@ void MeshDrawPass::CreateRenderPass()
 			ColorAttachment,
 			ColorAttachment,
 			DepthStencilAttachment},
-			{PreGBufferSubpass});
+			{MeshDraw});
 
 	if(!Pass)
 	{
