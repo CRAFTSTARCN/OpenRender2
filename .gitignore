@@ -8,3 +8,4 @@ ShaderWork.code-workspace
 .idea
 .vs
 __pycache__
+docs/

@@ -1,4 +1,4 @@
-﻿#include "DeferredShadingPass.h"
+#include "DeferredShadingPass.h"
 
 #include "OpenRenderRuntime/Core/RenderResource/RenderResource.h"
 #include "OpenRenderRuntime/Core/RHI/RHI.h"
@@ -247,7 +247,7 @@ void DeferredShadingPass::CreatePipeline()
 
 	DeferredShadingPipeline = RHIPtr->CreateGraphicsPipeline(
 		Pass,
-		1,
+		0,
 		{DeferredShadingGlobalLayout, DeferredShadingGBufferLayout},
 		{DeferredShadingMeshShader, DeferredShadingFragShader},
 		PipelineInfo);
